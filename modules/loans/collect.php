@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $loan_id_pay = intval($_POST['loan_id']);
     $installment_ids = $_POST['installment_ids'] ?? [];
     $amount_paid = floatval($_POST['amount_paid'] ?? 0);
-    $currency = $_POST['currency'] ?? 'EUR';
+    $currency = $_POST['currency'] ?? 'EFECTIVO';
 
     if (empty($installment_ids)) {
         $_SESSION['error'] = 'Seleccione al menos una cuota';
@@ -148,7 +148,7 @@ $clients_with_loans = $db->query("SELECT DISTINCT c.id, c.name, c.cedula_rif FRO
                         <label class="form-label">Moneda</label>
                         <select name="currency" class="form-select">
                             <option value="<?= $loan['currency'] ?>"><?= $loan['currency'] ?></option>
-                            <option value="<?= $loan['currency'] == 'EUR' ? 'BS' : 'EUR' ?>"><?= $loan['currency'] == 'EUR' ? 'Bolívares' : 'Euros' ?></option>
+                            <option value="<?= $loan['currency'] == 'EFECTIVO' ? 'BS' : 'EFECTIVO' ?>"><?= $loan['currency'] == 'EFECTIVO' ? 'Bolívares' : 'Euros' ?></option>
                         </select>
                     </div>
                 </div>

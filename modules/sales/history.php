@@ -46,7 +46,7 @@ $sales = $db->query("SELECT s.*, c.name as client_name FROM sales s JOIN clients
                     <select name="tipo" class="form-select">
                         <option value="">Todos</option>
                         <option value="contado" <?= $tipo=='contado'?'selected':'' ?>>Contado</option>
-                        <option value="credito" <?= $tipo=='credito'?'selected':'' ?>>Crédito</option>
+                        <option value="credito" <?= $tipo=='credito'?'selected':'' ?>>Cr&eacute;dito</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -73,10 +73,11 @@ $sales = $db->query("SELECT s.*, c.name as client_name FROM sales s JOIN clients
                         <tr>
                             <th>#</th>
                             <th>Cliente</th>
-                            <th>Total EURO</th>
-                            <th>Total Bs</th>
+                            <th>Efectivo $</th>
+                            <th>EURO €</th>
+                            <th>Bs</th>
                             <th>Tipo</th>
-                            <th>Moneda</th>
+                            <th>Pago</th>
                             <th>Estado</th>
                             <th>Cuotas</th>
                             <th>Fecha</th>
@@ -85,16 +86,17 @@ $sales = $db->query("SELECT s.*, c.name as client_name FROM sales s JOIN clients
                     </thead>
                     <tbody>
                         <?php if ($sales->num_rows === 0): ?>
-                        <tr><td colspan="10" class="text-center py-4 text-muted">No hay ventas en este período</td></tr>
+                        <tr><td colspan="11" class="text-center py-4 text-muted">No hay ventas en este per&iacute;odo</td></tr>
                         <?php endif; ?>
                         <?php while($s = $sales->fetch_assoc()): ?>
                         <tr>
                             <td><?= $s['id'] ?></td>
                             <td><?= h($s['client_name']) ?></td>
-                            <td>$<?= number_format($s['total_eur'],2) ?></td>
-                            <td>Bs. <?= number_format($s['total_bs'],2) ?></td>
+                            <td>$<?= $s['total_efectivo'] > 0 ? number_format($s['total_efectivo'],2) : '-' ?></td>
+                            <td>€<?= $s['total_euro'] > 0 ? number_format($s['total_euro'],2) : '-' ?></td>
+                            <td>Bs. <?= $s['total_bs'] > 0 ? number_format($s['total_bs'],2) : '-' ?></td>
                             <td><span class="badge bg-<?= $s['sale_type']=='contado'?'success':'warning' ?>"><?= $s['sale_type'] ?></span></td>
-                            <td><?= $s['payment_currency'] ?></td>
+                            <td><span class="badge bg-secondary"><?= $s['payment_currency'] ?></span></td>
                             <td>
                                 <span class="badge bg-<?= $s['status']=='pagada'?'success':($s['status']=='pendiente'?'danger':'info') ?>">
                                     <?= $s['status'] ?>

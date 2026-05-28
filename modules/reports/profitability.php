@@ -10,7 +10,7 @@ $where = $is_admin ? "1=1" : "p.user_id = $user_id";
 $where_s = $is_admin ? "1=1" : "s.user_id = $user_id";
 
 $mas_vendidos = $db->query("
-    SELECT p.name, p.type, SUM(si.quantity) as total_qty, SUM(si.quantity * si.unit_price_eur) as total_revenue
+    SELECT p.name, p.type, SUM(si.quantity) as total_qty, SUM(si.quantity * si.unit_price_efectivo) as total_revenue
     FROM sale_items si
     JOIN products p ON p.id=si.product_id
     JOIN sales s ON s.id=si.sale_id
@@ -21,8 +21,8 @@ $mas_vendidos = $db->query("
 ");
 
 $mas_rentables = $db->query("
-    SELECT p.name, p.type, AVG(si.unit_price_eur) as avg_price, SUM(si.quantity * si.unit_price_eur) as total_venta,
-        (SUM(si.quantity * si.unit_price_eur) * 0.3) as estimado_costo
+    SELECT p.name, p.type, AVG(si.unit_price_efectivo) as avg_price, SUM(si.quantity * si.unit_price_efectivo) as total_venta,
+        (SUM(si.quantity * si.unit_price_efectivo) * 0.3) as estimado_costo
     FROM sale_items si
     JOIN products p ON p.id=si.product_id
     JOIN sales s ON s.id=si.sale_id
@@ -33,7 +33,7 @@ $mas_rentables = $db->query("
 ");
 
 $margen = $db->query("
-    SELECT COALESCE(AVG(si.unit_price_eur),0) as precio_promedio FROM sale_items si
+    SELECT COALESCE(AVG(si.unit_price_efectivo),0) as precio_promedio FROM sale_items si
     JOIN sales s ON s.id=si.sale_id
     WHERE $where_s
 ")->fetch_assoc();
@@ -46,7 +46,7 @@ $margen = $db->query("
             <div class="col-md-4 mb-3">
                 <div class="stat-card bg-gradient-info">
                     <h3>$<?= number_format($margen['precio_promedio'],2) ?></h3>
-                    <small>Precio de Venta Promedio (EURO)</small>
+                    <small>Precio Promedio ($)</small>
                 </div>
             </div>
         </div>
@@ -57,7 +57,7 @@ $margen = $db->query("
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-sm mb-0">
-                                <thead><tr><th>Producto</th><th>Tipo</th><th>Cantidad</th><th>Total EURO</th></tr></thead>
+                                <thead><tr><th>Producto</th><th>Tipo</th><th>Cantidad</th><th>Efectivo $</th></tr></thead>
                                 <tbody>
                                     <?php while($mv = $mas_vendidos->fetch_assoc()): ?>
                                     <tr>

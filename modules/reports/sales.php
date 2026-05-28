@@ -16,10 +16,10 @@ switch($periodo) {
     case 'mes': default: $group = "DATE_FORMAT(created_at,'%Y-%m')"; $label = "Este Mes"; $fecha_desde = date('Y-m-01'); break;
 }
 
-$ventas_periodo = $db->query("SELECT COUNT(*) as total_ventas, COALESCE(SUM(total_eur),0) as total_eur, COALESCE(SUM(total_bs),0) as total_bs FROM sales WHERE $where AND DATE(created_at) >= '$fecha_desde'")->fetch_assoc();
-$contado = $db->query("SELECT COUNT(*) as c, COALESCE(SUM(total_eur),0) as t FROM sales WHERE $where AND sale_type='contado' AND DATE(created_at) >= '$fecha_desde'")->fetch_assoc();
-$credito = $db->query("SELECT COUNT(*) as c, COALESCE(SUM(total_eur),0) as t FROM sales WHERE $where AND sale_type='credito' AND DATE(created_at) >= '$fecha_desde'")->fetch_assoc();
-$top_clientes = $db->query("SELECT c.name, COUNT(s.id) as total_ventas, SUM(s.total_eur) as total FROM sales s JOIN clients c ON c.id=s.client_id WHERE $where AND DATE(s.created_at) >= '$fecha_desde' GROUP BY s.client_id ORDER BY total DESC LIMIT 5");
+$ventas_periodo = $db->query("SELECT COUNT(*) as total_ventas, COALESCE(SUM(total_efectivo),0) as total_efectivo, COALESCE(SUM(total_bs),0) as total_bs FROM sales WHERE $where AND DATE(created_at) >= '$fecha_desde'")->fetch_assoc();
+$contado = $db->query("SELECT COUNT(*) as c, COALESCE(SUM(total_efectivo),0) as t FROM sales WHERE $where AND sale_type='contado' AND DATE(created_at) >= '$fecha_desde'")->fetch_assoc();
+$credito = $db->query("SELECT COUNT(*) as c, COALESCE(SUM(total_efectivo),0) as t FROM sales WHERE $where AND sale_type='credito' AND DATE(created_at) >= '$fecha_desde'")->fetch_assoc();
+$top_clientes = $db->query("SELECT c.name, COUNT(s.id) as total_ventas, SUM(s.total_efectivo) as total FROM sales s JOIN clients c ON c.id=s.client_id WHERE $where AND DATE(s.created_at) >= '$fecha_desde' GROUP BY s.client_id ORDER BY total DESC LIMIT 5");
 ?>
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -52,8 +52,8 @@ $top_clientes = $db->query("SELECT c.name, COUNT(s.id) as total_ventas, SUM(s.to
             </div>
             <div class="col-md-3 mb-3">
                 <div class="stat-card bg-gradient-success">
-                    <h3>$<?= number_format($ventas_periodo['total_eur'],2) ?></h3>
-                    <small>Total EURO</small>
+                    <h3>$<?= number_format($ventas_periodo['total_efectivo'],2) ?></h3>
+                    <small>Efectivo $</small>
                 </div>
             </div>
             <div class="col-md-3 mb-3">
@@ -89,7 +89,7 @@ $top_clientes = $db->query("SELECT c.name, COUNT(s.id) as total_ventas, SUM(s.to
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-sm mb-0">
-                                <thead><tr><th>Cliente</th><th>Ventas</th><th>Total EURO</th></tr></thead>
+                                <thead><tr><th>Cliente</th><th>Ventas</th><th>Efectivo $</th></tr></thead>
                                 <tbody>
                                     <?php while($tc = $top_clientes->fetch_assoc()): ?>
                                     <tr>

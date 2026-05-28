@@ -12,7 +12,7 @@ $result = $db->query("SELECT * FROM products WHERE $where ORDER BY name ASC");
 ?>
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">Gestión de Productos</h4>
+        <h4 class="mb-0">Gesti&oacute;n de Productos</h4>
         <a href="create.php" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Nuevo Producto</a>
     </div>
     <div class="card">
@@ -23,16 +23,17 @@ $result = $db->query("SELECT * FROM products WHERE $where ORDER BY name ASC");
                         <tr>
                             <th>Tipo</th>
                             <th>Nombre</th>
-                            <th>Descripción</th>
+                            <th>Descripci&oacute;n</th>
                             <th>Stock</th>
-                            <th>Precio EURO</th>
-                            <th>Precio Bs</th>
+                            <th>Efectivo (Divisa)</th>
+                            <th>EURO</th>
+                            <th>Bs</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if ($result->num_rows === 0): ?>
-                        <tr><td colspan="7" class="text-center py-4 text-muted">No hay productos registrados</td></tr>
+                        <tr><td colspan="8" class="text-center py-4 text-muted">No hay productos registrados</td></tr>
                         <?php endif; ?>
                         <?php while($row = $result->fetch_assoc()): ?>
                         <tr>
@@ -44,7 +45,8 @@ $result = $db->query("SELECT * FROM products WHERE $where ORDER BY name ASC");
                                     <?= $row['stock'] ?>
                                 </span>
                             </td>
-                            <td>€<?= number_format($row['price_eur'], 2) ?></td>
+                            <td>$<?= number_format($row['price_efectivo'], 2) ?></td>
+                            <td>€<?= number_format($row['price_euro'], 2) ?></td>
                             <td>Bs. <?= number_format($row['price_bcv'], 2) ?></td>
                             <td>
                                 <a href="edit.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>

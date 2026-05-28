@@ -49,7 +49,7 @@ $bajo_stock = $db->query("SELECT COUNT(*) as c FROM products WHERE $where AND st
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead>
-                            <tr><th>Producto</th><th>Tipo</th><th>Stock</th><th>Precio EURO</th><th>Valor Total EURO</th></tr>
+                            <tr><th>Producto</th><th>Tipo</th><th>Stock</th><th>Efectivo $</th><th>EURO €</th><th>Bs</th></tr>
                         </thead>
                         <tbody>
                             <?php while($p = $products->fetch_assoc()): ?>
@@ -57,8 +57,9 @@ $bajo_stock = $db->query("SELECT COUNT(*) as c FROM products WHERE $where AND st
                                 <td><?= h($p['name']) ?></td>
                                 <td><span class="badge bg-secondary"><?= h($p['type']) ?></span></td>
                                 <td><strong><?= $p['stock'] ?></strong></td>
-                                <td>€<?= number_format($p['price_eur'],2) ?></td>
-                                <td>€<?= number_format($p['stock'] * $p['price_eur'],2) ?></td>
+                                <td>$<?= number_format($p['price_efectivo'],2) ?></td>
+                                <td>€<?= number_format($p['price_euro'],2) ?></td>
+                                <td>Bs. <?= number_format($p['price_bcv'],2) ?></td>
                             </tr>
                             <?php endwhile; ?>
                         </tbody>

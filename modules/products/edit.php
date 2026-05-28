@@ -17,11 +17,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $db->real_escape_string($_POST['name']);
     $description = $db->real_escape_string($_POST['description'] ?? '');
     $stock = intval($_POST['stock']);
-    $price_eur = floatval($_POST['price_eur']);
+    $price_efectivo = floatval($_POST['price_efectivo']);
+    $price_euro = floatval($_POST['price_euro']);
     $price_bcv = floatval($_POST['price_bcv']);
 
-    $stmt = $db->prepare("UPDATE products SET type=?, name=?, description=?, stock=?, price_eur=?, price_bcv=? WHERE id=? AND $where");
-    $stmt->bind_param("sssiddi", $type, $name, $description, $stock, $price_eur, $price_bcv, $id);
+    $stmt = $db->prepare("UPDATE products SET type=?, name=?, description=?, stock=?, price_efectivo=?, price_euro=?, price_bcv=? WHERE id=? AND $where");
+    $stmt->bind_param("sssidddi", $type, $name, $description, $stock, $price_efectivo, $price_euro, $price_bcv, $id);
     if ($stmt->execute()) {
         $_SESSION['success'] = 'Producto actualizado';
         redirect('/modules/products/list.php');
@@ -48,11 +49,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label class="form-label">Stock <span class="text-danger">*</span></label>
                         <input type="number" name="stock" class="form-control" min="0" value="<?= $product['stock'] ?>" required>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Precio EURO <span class="text-danger">*</span></label>
-                        <input type="number" name="price_eur" class="form-control" step="0.01" min="0" value="<?= $product['price_eur'] ?>" required>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Precio Efectivo (Divisa) $ <span class="text-danger">*</span></label>
+                        <input type="number" name="price_efectivo" class="form-control" step="0.01" min="0" value="<?= $product['price_efectivo'] ?>" required>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Precio EURO € <span class="text-danger">*</span></label>
+                        <input type="number" name="price_euro" class="form-control" step="0.01" min="0" value="<?= $product['price_euro'] ?>" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
                         <label class="form-label">Precio Bs <span class="text-danger">*</span></label>
                         <input type="number" name="price_bcv" class="form-control" step="0.01" min="0" value="<?= $product['price_bcv'] ?>" required>
                     </div>

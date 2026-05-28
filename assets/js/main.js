@@ -8,21 +8,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function calcTotals() {
     const rows = document.querySelectorAll('.sale-row');
-    let totalEur = 0;
+    let totalEfectivo = 0;
+    let totalEuro = 0;
     let totalBs = 0;
     rows.forEach(function(row) {
         const qty = parseFloat(row.querySelector('.qty').value) || 0;
-        const priceEur = parseFloat(row.querySelector('.price-eur').dataset.value) || 0;
+        const priceEfectivo = parseFloat(row.querySelector('.price-efectivo').dataset.value) || 0;
+        const priceEuro = parseFloat(row.querySelector('.price-euro').dataset.value) || 0;
         const priceBs = parseFloat(row.querySelector('.price-bs').dataset.value) || 0;
-        const subtotalEur = qty * priceEur;
+        const subtotalEfectivo = qty * priceEfectivo;
+        const subtotalEuro = qty * priceEuro;
         const subtotalBs = qty * priceBs;
-        row.querySelector('.subtotal-eur').textContent = subtotalEur.toFixed(2);
+        row.querySelector('.subtotal-efectivo').textContent = subtotalEfectivo.toFixed(2);
+        row.querySelector('.subtotal-euro').textContent = subtotalEuro.toFixed(2);
         row.querySelector('.subtotal-bs').textContent = subtotalBs.toFixed(2);
-        totalEur += subtotalEur;
+        totalEfectivo += subtotalEfectivo;
+        totalEuro += subtotalEuro;
         totalBs += subtotalBs;
     });
-    document.getElementById('total-eur').textContent = totalEur.toFixed(2);
-    document.getElementById('total-bs').textContent = totalBs.toFixed(2);
+    const te = document.getElementById('total-efectivo');
+    const teur = document.getElementById('total-euro');
+    const tbs = document.getElementById('total-bs');
+    if (te) te.textContent = totalEfectivo.toFixed(2);
+    if (teur) teur.textContent = totalEuro.toFixed(2);
+    if (tbs) tbs.textContent = totalBs.toFixed(2);
 }
 
 function confirmDelete(msg) {

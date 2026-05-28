@@ -19,12 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $product_ids = $_POST['product_id'] ?? [];
     $quantities = $_POST['quantity'] ?? [];
 
-    if ($exchange_rate <= 0) {
-        $_SESSION['error'] = 'Debe ingresar la tasa de cambio';
-        redirect('/modules/sales/register.php');
-    }
-
-    $total_eur = 0;
+    $total_efectivo = 0;
+    $total_euro = 0;
     $total_bs = 0;
     $items = [];
 
@@ -42,32 +38,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $items[] = [
                 'product_id' => $pid,
                 'quantity' => $qty,
-                'unit_price_eur' => $prod['price_eur'],
-                'unit_price_bs' => $payment_currency === 'BCV' ? $prod['price_bcv'] : ($prod['price_eur'] * $exchange_rate)
+                'unit_price_efectivo' => $prod['price_efectivo'],
+                'unit_price_euro' => $prod['price_euro'],
+                'unit_price_bs' => $prod['price_bcv']
             ];
-            $total_eur += $qty * $prod['price_eur'];
-            $total_bs += $qty * ($payment_currency === 'BCV' ? $prod['price_bcv'] : ($prod['price_eur'] * $exchange_rate));
+            $total_efectivo += $qty * $prod['price_efectivo'];
+            $total_euro += $qty * $prod['price_euro'];
+            $total_bs += $qty * $prod['price_bcv'];
         }
 
         if (empty($items)) throw new Exception("Debe agregar al menos un producto");
 
-        $stmt = $db->prepare("INSERT INTO sales (user_id, client_id, sale_type, payment_currency, exchange_rate, total_eur, total_bs, status, installments) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $db->prepare("INSERT INTO sales (user_id, client_id, sale_type, payment_currency, exchange_rate, total_efectivo, total_euro, total_bs, status, installments) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $status = $sale_type === 'contado' ? 'pagada' : 'pendiente';
-        $stmt->bind_param("iissdddis", $user_id, $client_id, $sale_type, $payment_currency, $exchange_rate, $total_eur, $total_bs, $status, $installments);
+        $stmt->bind_param("iissddddds", $user_id, $client_id, $sale_type, $payment_currency, $exchange_rate, $total_efectivo, $total_euro, $total_bs, $status, $installments);
         $stmt->execute();
         $sale_id = $db->insert_id;
 
         foreach ($items as $item) {
-            $stmt2 = $db->prepare("INSERT INTO sale_items (sale_id, product_id, quantity, unit_price_eur, unit_price_bs) VALUES (?, ?, ?, ?, ?)");
-            $stmt2->bind_param("iiidd", $sale_id, $item['product_id'], $item['quantity'], $item['unit_price_eur'], $item['unit_price_bs']);
+            $stmt2 = $db->prepare("INSERT INTO sale_items (sale_id, product_id, quantity, unit_price_efectivo, unit_price_euro, unit_price_bs) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt2->bind_param("iiiddd", $sale_id, $item['product_id'], $item['quantity'], $item['unit_price_efectivo'], $item['unit_price_euro'], $item['unit_price_bs']);
             $stmt2->execute();
-
             $db->query("UPDATE products SET stock = stock - {$item['quantity']} WHERE id = {$item['product_id']}");
         }
 
         if ($sale_type === 'contado') {
-            $stmt3 = $db->prepare("INSERT INTO payments (sale_id, amount_eur, amount_bs, exchange_rate) VALUES (?, ?, ?, ?)");
-            $stmt3->bind_param("iddd", $sale_id, $total_eur, $total_bs, $exchange_rate);
+            $stmt3 = $db->prepare("INSERT INTO payments (sale_id, amount_efectivo, amount_euro, amount_bs, exchange_rate) VALUES (?, ?, ?, ?, ?)");
+            $stmt3->bind_param("idddd", $sale_id, $total_efectivo, $total_euro, $total_bs, $exchange_rate);
             $stmt3->execute();
         }
 
@@ -105,28 +102,29 @@ $rate = getExchangeRate();
                         <label class="form-label">Tipo de Venta <span class="text-danger">*</span></label>
                         <select name="sale_type" class="form-select" required>
                             <option value="contado">Contado</option>
-                            <option value="credito">Crédito</option>
+                            <option value="credito">Cr&eacute;dito</option>
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Moneda de Pago <span class="text-danger">*</span></label>
+                        <label class="form-label">Tipo de Pago <span class="text-danger">*</span></label>
                         <select name="payment_currency" class="form-select" required>
-                            <option value="EUR">EURO</option>
-                            <option value="BCV">BCV (Bolívares)</option>
+                            <option value="EFECTIVO">Efectivo (Divisa) $</option>
+                            <option value="EURO">EURO €</option>
+                            <option value="BCV">BCV (Bol&iacute;vares)</option>
                         </select>
                     </div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-4">
-                        <label class="form-label">Tasa de Cambio (Bs/EUR)</label>
+                        <label class="form-label">Tasa de Cambio (Bs/Divisa)</label>
                         <div class="input-group">
-                            <input type="number" name="exchange_rate" id="exchange_rate" class="form-control" step="0.01" min="0" value="<?= $rate ?>" required>
+                            <input type="number" name="exchange_rate" id="exchange_rate" class="form-control" step="0.01" min="0" value="<?= $rate ?>">
                             <button type="button" class="btn btn-outline-secondary" onclick="fetchTasa()">Auto</button>
                         </div>
-                        <small class="text-muted" id="tasa_info"><?= $rate ? "Tasa actual: Bs. ".number_format($rate,2) : "Usando tasa manual" ?></small>
+                        <small class="text-muted" id="tasa_info"><?= $rate ? "Tasa actual: Bs. ".number_format($rate,2) : "Ingrese tasa manual" ?></small>
                     </div>
                     <div class="col-md-2" id="installments_div">
-                        <label class="form-label">N° Cuotas</label>
+                        <label class="form-label">N&deg; Cuotas</label>
                         <input type="number" name="installments" class="form-control" value="1" min="1">
                     </div>
                 </div>
@@ -141,10 +139,12 @@ $rate = getExchangeRate();
                                 <thead>
                                     <tr>
                                         <th>Producto</th>
-                                        <th>Precio EURO</th>
-                                        <th>Precio Bs</th>
+                                        <th>Efectivo $</th>
+                                        <th>EURO €</th>
+                                        <th>Bs</th>
                                         <th>Cantidad</th>
-                                        <th>Subtotal EURO</th>
+                                        <th>Subtotal $</th>
+                                        <th>Subtotal €</th>
                                         <th>Subtotal Bs</th>
                                         <th></th>
                                     </tr>
@@ -155,16 +155,18 @@ $rate = getExchangeRate();
                                             <select name="product_id[]" class="form-select product-select" required>
                                                 <option value="">Seleccionar...</option>
                                                 <?php mysqli_data_seek($products, 0); while($p = $products->fetch_assoc()): ?>
-                                                <option value="<?= $p['id'] ?>" data-price-eur="<?= $p['price_eur'] ?>" data-price-bs="<?= $p['price_bcv'] ?>" data-stock="<?= $p['stock'] ?>">
+                                                <option value="<?= $p['id'] ?>" data-price-efectivo="<?= $p['price_efectivo'] ?>" data-price-euro="<?= $p['price_euro'] ?>" data-price-bs="<?= $p['price_bcv'] ?>" data-stock="<?= $p['stock'] ?>">
                                                     <?= h($p['name']) ?> (Stock: <?= $p['stock'] ?>)
                                                 </option>
                                                 <?php endwhile; ?>
                                             </select>
                                         </td>
-                                        <td><span class="price-eur" data-value="0">0.00</span></td>
+                                        <td><span class="price-efectivo" data-value="0">0.00</span></td>
+                                        <td><span class="price-euro" data-value="0">0.00</span></td>
                                         <td><span class="price-bs" data-value="0">0.00</span></td>
                                         <td><input type="number" name="quantity[]" class="form-control qty" min="1" value="1" required></td>
-                                        <td><span class="subtotal-eur">0.00</span></td>
+                                        <td><span class="subtotal-efectivo">0.00</span></td>
+                                        <td><span class="subtotal-euro">0.00</span></td>
                                         <td><span class="subtotal-bs">0.00</span></td>
                                         <td><button type="button" class="btn btn-sm btn-danger" onclick="removeProductRow(this)"><i class="bi bi-x"></i></button></td>
                                     </tr>
@@ -172,7 +174,8 @@ $rate = getExchangeRate();
                                 <tfoot>
                                     <tr class="fw-bold">
                                         <td colspan="4" class="text-end">Totales:</td>
-                                        <td id="total-eur">0.00</td>
+                                        <td id="total-efectivo">0.00</td>
+                                        <td id="total-euro">0.00</td>
                                         <td id="total-bs">0.00</td>
                                         <td></td>
                                     </tr>
@@ -191,7 +194,7 @@ $rate = getExchangeRate();
 let productCache = [];
 document.querySelectorAll('.product-select option').forEach(o => {
     if (o.value) {
-        productCache[o.value] = { price_eur: o.dataset.priceEur, price_bs: o.dataset.priceBs, stock: o.dataset.stock };
+        productCache[o.value] = { price_efectivo: o.dataset.priceEfectivo, price_euro: o.dataset.priceEuro, price_bs: o.dataset.priceBs, stock: o.dataset.stock };
     }
 });
 
@@ -201,11 +204,11 @@ function addProductRow() {
     const clone = first.cloneNode(true);
     clone.querySelectorAll('input, select').forEach(el => el.value = '');
     clone.querySelector('input.qty').value = '1';
-    clone.querySelector('.subtotal-eur').textContent = '0.00';
+    clone.querySelector('.subtotal-efectivo').textContent = '0.00';
+    clone.querySelector('.subtotal-euro').textContent = '0.00';
     clone.querySelector('.subtotal-bs').textContent = '0.00';
-    clone.querySelector('.price-eur').textContent = '0.00';
-    clone.querySelector('.price-eur').dataset.value = '0';
-    clone.querySelector('.price-bs').textContent = '0.00';
+    clone.querySelector('.price-efectivo').dataset.value = '0';
+    clone.querySelector('.price-euro').dataset.value = '0';
     clone.querySelector('.price-bs').dataset.value = '0';
     tbody.appendChild(clone);
     attachEvents(clone);
@@ -224,14 +227,18 @@ function attachEvents(row) {
         const opt = this.options[this.selectedIndex];
         const td = this.closest('tr');
         if (opt.value) {
-            td.querySelector('.price-eur').textContent = parseFloat(opt.dataset.priceEur).toFixed(2);
-            td.querySelector('.price-eur').dataset.value = opt.dataset.priceEur;
+            td.querySelector('.price-efectivo').textContent = parseFloat(opt.dataset.priceEfectivo).toFixed(2);
+            td.querySelector('.price-efectivo').dataset.value = opt.dataset.priceEfectivo;
+            td.querySelector('.price-euro').textContent = parseFloat(opt.dataset.priceEuro).toFixed(2);
+            td.querySelector('.price-euro').dataset.value = opt.dataset.priceEuro;
             td.querySelector('.price-bs').textContent = parseFloat(opt.dataset.priceBs).toFixed(2);
             td.querySelector('.price-bs').dataset.value = opt.dataset.priceBs;
             td.querySelector('input.qty').max = opt.dataset.stock;
         } else {
-            td.querySelector('.price-eur').textContent = '0.00';
-            td.querySelector('.price-eur').dataset.value = '0';
+            td.querySelector('.price-efectivo').textContent = '0.00';
+            td.querySelector('.price-efectivo').dataset.value = '0';
+            td.querySelector('.price-euro').textContent = '0.00';
+            td.querySelector('.price-euro').dataset.value = '0';
             td.querySelector('.price-bs').textContent = '0.00';
             td.querySelector('.price-bs').dataset.value = '0';
         }

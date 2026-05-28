@@ -15,7 +15,8 @@ $where_clients = $is_admin ? "1=1" : "user_id = $user_id";
 if ($client_id > 0) {
     $deudas = $db->query("
         SELECT s.*, c.name as client_name, c.cedula_rif,
-            (s.total_eur - COALESCE((SELECT SUM(amount_eur) FROM payments WHERE sale_id=s.id),0)) as saldo_eur,
+            (s.total_efectivo - COALESCE((SELECT SUM(amount_efectivo) FROM payments WHERE sale_id=s.id),0)) as saldo_efectivo,
+            (s.total_euro - COALESCE((SELECT SUM(amount_euro) FROM payments WHERE sale_id=s.id),0)) as saldo_euro,
             (s.total_bs - COALESCE((SELECT SUM(amount_bs) FROM payments WHERE sale_id=s.id),0)) as saldo_bs
         FROM sales s
         JOIN clients c ON c.id=s.client_id
@@ -33,7 +34,7 @@ if ($client_id > 0) {
         <div class="card-body">
             <form method="GET" class="row g-2">
                 <div class="col-md-8">
-                    <input type="text" name="search" class="form-control" placeholder="Buscar cliente por nombre o cédula..." value="<?= h($search) ?>">
+                    <input type="text" name="search" class="form-control" placeholder="Buscar cliente por nombre o c&eacute;dula..." value="<?= h($search) ?>">
                 </div>
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-primary w-100">Buscar</button>
@@ -48,7 +49,7 @@ if ($client_id > 0) {
     <?php if ($search && !$client_id): ?>
     <div class="card mb-3">
         <div class="card-body">
-            <h5>Resultados de búsqueda</h5>
+            <h5>Resultados de b&uacute;squeda</h5>
             <div class="list-group">
                 <?php $s = $db->real_escape_string($search);
                 $results = $db->query("SELECT * FROM clients WHERE $where_clients AND (name LIKE '%$s%' OR cedula_rif LIKE '%$s%') LIMIT 10"); ?>
@@ -80,26 +81,31 @@ if ($client_id > 0) {
                         <tr>
                             <th>Venta #</th>
                             <th>Fecha</th>
-                            <th>Total EURO</th>
+                            <th>Total $</th>
+                            <th>Total €</th>
                             <th>Total Bs</th>
-                            <th>Saldo EURO</th>
+                            <th>Saldo $</th>
+                            <th>Saldo €</th>
                             <th>Saldo Bs</th>
                             <th>Cuotas</th>
-                            <th>Acción</th>
+                            <th>Acci&oacute;n</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php $total_deuda_eur = 0; $total_deuda_bs = 0; ?>
+                        <?php $total_deuda_efectivo = 0; $total_deuda_euro = 0; $total_deuda_bs = 0; ?>
                         <?php while($d = $deudas->fetch_assoc()): 
-                            $total_deuda_eur += $d['saldo_eur'];
+                            $total_deuda_efectivo += $d['saldo_efectivo'];
+                            $total_deuda_euro += $d['saldo_euro'];
                             $total_deuda_bs += $d['saldo_bs'];
                         ?>
                         <tr>
                             <td>#<?= $d['id'] ?></td>
                             <td><?= date('d/m/Y', strtotime($d['created_at'])) ?></td>
-                            <td>$<?= number_format($d['total_eur'],2) ?></td>
+                            <td>$<?= number_format($d['total_efectivo'],2) ?></td>
+                            <td>€<?= number_format($d['total_euro'],2) ?></td>
                             <td>Bs. <?= number_format($d['total_bs'],2) ?></td>
-                            <td><strong>$<?= number_format($d['saldo_eur'],2) ?></strong></td>
+                            <td><strong>$<?= number_format($d['saldo_efectivo'],2) ?></strong></td>
+                            <td><strong>€<?= number_format($d['saldo_euro'],2) ?></strong></td>
                             <td><strong>Bs. <?= number_format($d['saldo_bs'],2) ?></strong></td>
                             <td><?= $d['installments'] ?></td>
                             <td>
@@ -111,9 +117,10 @@ if ($client_id > 0) {
                     <tfoot class="fw-bold">
                         <tr>
                             <td colspan="4" class="text-end">Total Adeudado:</td>
-                            <td>$<?= number_format($total_deuda_eur,2) ?></td>
+                            <td>$<?= number_format($total_deuda_efectivo,2) ?></td>
+                            <td>€<?= number_format($total_deuda_euro,2) ?></td>
                             <td>Bs. <?= number_format($total_deuda_bs,2) ?></td>
-                            <td colspan="2"></td>
+                            <td colspan="3"></td>
                         </tr>
                     </tfoot>
                 </table>

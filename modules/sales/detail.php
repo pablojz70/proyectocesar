@@ -30,8 +30,8 @@ $payments = $db->query("SELECT * FROM payments WHERE sale_id=$id ORDER BY paymen
                     <div class="card-header">Datos del Cliente</div>
                     <div class="card-body">
                         <p><strong>Nombre:</strong> <?= h($sale['client_name']) ?></p>
-                        <p><strong>Cédula/RIF:</strong> <?= h($sale['cedula_rif']) ?></p>
-                        <p><strong>Teléfono:</strong> <?= h($sale['phone']) ?></p>
+                        <p><strong>C&eacute;dula/RIF:</strong> <?= h($sale['cedula_rif']) ?></p>
+                        <p><strong>Tel&eacute;fono:</strong> <?= h($sale['phone']) ?></p>
                     </div>
                 </div>
             </div>
@@ -41,9 +41,9 @@ $payments = $db->query("SELECT * FROM payments WHERE sale_id=$id ORDER BY paymen
                     <div class="card-body">
                         <p><strong>Fecha:</strong> <?= date('d/m/Y H:i', strtotime($sale['created_at'])) ?></p>
                         <p><strong>Tipo:</strong> <span class="badge bg-<?= $sale['sale_type']=='contado'?'success':'warning' ?>"><?= $sale['sale_type'] ?></span></p>
-                        <p><strong>Moneda:</strong> <?= $sale['payment_currency'] ?></p>
+                        <p><strong>Pago:</strong> <span class="badge bg-secondary"><?= $sale['payment_currency'] ?></span></p>
                         <p><strong>Estado:</strong> <span class="badge bg-<?= $sale['status']=='pagada'?'success':($sale['status']=='pendiente'?'danger':'info') ?>"><?= $sale['status'] ?></span></p>
-                        <p><strong>Tasa BCV:</strong> Bs. <?= number_format($sale['exchange_rate'],2) ?></p>
+                        <p><strong>Tasa:</strong> Bs. <?= number_format($sale['exchange_rate'],2) ?></p>
                     </div>
                 </div>
             </div>
@@ -54,16 +54,18 @@ $payments = $db->query("SELECT * FROM payments WHERE sale_id=$id ORDER BY paymen
                 <div class="table-responsive">
                     <table class="table mb-0">
                         <thead>
-                            <tr><th>Producto</th><th>Cantidad</th><th>Precio EURO</th><th>Precio Bs</th><th>Subtotal EURO</th><th>Subtotal Bs</th></tr>
+                            <tr><th>Producto</th><th>Cantidad</th><th>Efectivo $</th><th>EURO €</th><th>Bs</th><th>Subtotal $</th><th>Subtotal €</th><th>Subtotal Bs</th></tr>
                         </thead>
                         <tbody>
                             <?php while($item = $items->fetch_assoc()): ?>
                             <tr>
                                 <td><?= h($item['product_name']) ?></td>
                                 <td><?= $item['quantity'] ?></td>
-                                <td>€<?= number_format($item['unit_price_eur'],2) ?></td>
+                                <td>$<?= number_format($item['unit_price_efectivo'],2) ?></td>
+                                <td>€<?= number_format($item['unit_price_euro'],2) ?></td>
                                 <td>Bs. <?= number_format($item['unit_price_bs'],2) ?></td>
-                                <td>€<?= number_format($item['quantity']*$item['unit_price_eur'],2) ?></td>
+                                <td>$<?= number_format($item['quantity']*$item['unit_price_efectivo'],2) ?></td>
+                                <td>€<?= number_format($item['quantity']*$item['unit_price_euro'],2) ?></td>
                                 <td>Bs. <?= number_format($item['quantity']*$item['unit_price_bs'],2) ?></td>
                             </tr>
                             <?php endwhile; ?>
@@ -71,7 +73,8 @@ $payments = $db->query("SELECT * FROM payments WHERE sale_id=$id ORDER BY paymen
                         <tfoot>
                             <tr class="fw-bold">
                                 <td colspan="4" class="text-end">Totales:</td>
-                                <td>$<?= number_format($sale['total_eur'],2) ?></td>
+                                <td>$<?= number_format($sale['total_efectivo'],2) ?></td>
+                                <td>€<?= number_format($sale['total_euro'],2) ?></td>
                                 <td>Bs. <?= number_format($sale['total_bs'],2) ?></td>
                             </tr>
                         </tfoot>
@@ -85,23 +88,26 @@ $payments = $db->query("SELECT * FROM payments WHERE sale_id=$id ORDER BY paymen
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table mb-0">
-                        <thead><tr><th>#</th><th>Monto EURO</th><th>Monto Bs</th><th>Tasa</th><th>Fecha</th></tr></thead>
+                        <thead><tr><th>#</th><th>Efectivo $</th><th>EURO €</th><th>Bs</th><th>Tasa</th><th>Fecha</th></tr></thead>
                         <tbody>
                             <?php if ($payments->num_rows === 0): ?>
-                            <tr><td colspan="5" class="text-center text-muted">Sin pagos registrados</td></tr>
+                            <tr><td colspan="6" class="text-center text-muted">Sin pagos registrados</td></tr>
                             <?php endif; ?>
                             <?php while($p = $payments->fetch_assoc()): ?>
                             <tr>
                                 <td><?= $p['id'] ?></td>
-                                <td>$<?= number_format($p['amount_eur'],2) ?></td>
+                                <td>$<?= number_format($p['amount_efectivo'],2) ?></td>
+                                <td>€<?= number_format($p['amount_euro'],2) ?></td>
                                 <td>Bs. <?= number_format($p['amount_bs'],2) ?></td>
                                 <td><?= $p['exchange_rate'] ? number_format($p['exchange_rate'],2) : '-' ?></td>
                                 <td><?= date('d/m/Y H:i', strtotime($p['payment_date'])) ?></td>
                             </tr>
                             <?php endwhile; ?>
                             <tr class="fw-bold">
-                                <td colspan="2">Total Pagado: $<?= number_format($sale['total_eur'],2) ?></td>
-                                <td colspan="3">Bs. <?= number_format($sale['total_bs'],2) ?></td>
+                                <td>$<?= number_format($sale['total_efectivo'],2) ?></td>
+                                <td>€<?= number_format($sale['total_euro'],2) ?></td>
+                                <td>Bs. <?= number_format($sale['total_bs'],2) ?></td>
+                                <td colspan="3">Total Pagado</td>
                             </tr>
                         </tbody>
                     </table>

@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="col-md-3">
                         <label class="form-label">Moneda <span class="text-danger">*</span></label>
                         <select name="currency" class="form-select" required>
-                            <option value="EUR">Euros (EUR)</option>
+                            <option value="EFECTIVO">Euros (EUR)</option>
                             <option value="BS">Bolívares (Bs)</option>
                         </select>
                     </div>

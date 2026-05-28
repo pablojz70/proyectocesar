@@ -14,7 +14,7 @@ $fecha_hasta = $_GET['fecha_hasta'] ?? date('Y-m-d');
 $morosos = $db->query("
     SELECT c.id, c.name, c.cedula_rif, c.phone,
         COUNT(s.id) as deudas_pendientes,
-        SUM(s.total_eur - COALESCE((SELECT SUM(amount_eur) FROM payments WHERE sale_id=s.id),0)) as total_deuda_eur
+        SUM(s.total_efectivo - COALESCE((SELECT SUM(amount_efectivo) FROM payments WHERE sale_id=s.id),0)) as total_deuda_eur
     FROM sales s
     JOIN clients c ON c.id=s.client_id
     WHERE $where AND s.sale_type='credito' AND s.status!='pagada'
@@ -24,14 +24,14 @@ $morosos = $db->query("
 ");
 
 $pagos_periodo = $db->query("
-    SELECT COUNT(*) as total_pagos, COALESCE(SUM(p.amount_eur),0) as total_eur, COALESCE(SUM(p.amount_bs),0) as total_bs
+    SELECT COUNT(*) as total_pagos, COALESCE(SUM(p.amount_efectivo),0) as total_efectivo, COALESCE(SUM(p.amount_bs),0) as total_bs
     FROM payments p
     JOIN sales s ON s.id=p.sale_id
     WHERE $where AND DATE(p.payment_date) BETWEEN '$fecha_desde' AND '$fecha_hasta'
 ")->fetch_assoc();
 
-$credito_total = $db->query("SELECT COALESCE(SUM(total_eur),0) as t FROM sales WHERE $where AND sale_type='credito'")->fetch_assoc()['t'];
-$cobrado_total = $db->query("SELECT COALESCE(SUM(p.amount_eur),0) as t FROM payments p JOIN sales s ON s.id=p.sale_id WHERE $where")->fetch_assoc()['t'];
+$credito_total = $db->query("SELECT COALESCE(SUM(total_efectivo),0) as t FROM sales WHERE $where AND sale_type='credito'")->fetch_assoc()['t'];
+$cobrado_total = $db->query("SELECT COALESCE(SUM(p.amount_efectivo),0) as t FROM payments p JOIN sales s ON s.id=p.sale_id WHERE $where")->fetch_assoc()['t'];
 $eficiencia = $credito_total > 0 ? ($cobrado_total / $credito_total * 100) : 0;
 ?>
 <div class="container-fluid">
@@ -67,8 +67,8 @@ $eficiencia = $credito_total > 0 ? ($cobrado_total / $credito_total * 100) : 0;
             </div>
             <div class="col-md-3 mb-3">
                 <div class="stat-card bg-gradient-success">
-                    <h3>$<?= number_format($pagos_periodo['total_eur'],2) ?></h3>
-                    <small>Cobrado en EURO</small>
+                    <h3>$<?= number_format($pagos_periodo['total_efectivo'],2) ?></h3>
+                    <small>Cobrado en $</small>
                 </div>
             </div>
             <div class="col-md-3 mb-3">
@@ -90,7 +90,7 @@ $eficiencia = $credito_total > 0 ? ($cobrado_total / $credito_total * 100) : 0;
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead>
-                            <tr><th>Cliente</th><th>Cédula</th><th>Teléfono</th><th>Deudas Pendientes</th><th>Total Deuda EURO</th></tr>
+                            <tr><th>Cliente</th><th>Cédula</th><th>Teléfono</th><th>Deudas Pendientes</th><th>Total Deuda $</th></tr>
                         </thead>
                         <tbody>
                             <?php if ($morosos->num_rows === 0): ?>

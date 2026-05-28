@@ -13,7 +13,7 @@ $where_p = $is_admin ? "1=1" : "p.user_id = $user_id";
 
 $total_clients = $db->query("SELECT COUNT(*) as c FROM clients WHERE $where_c")->fetch_assoc()['c'];
 $total_products = $db->query("SELECT COUNT(*) as c FROM products WHERE $where_p")->fetch_assoc()['c'];
-$total_sales = $db->query("SELECT COUNT(*) as c, COALESCE(SUM(total_eur),0) as t FROM sales WHERE $where")->fetch_assoc();
+$total_sales = $db->query("SELECT COUNT(*) as c, COALESCE(SUM(total_efectivo),0) as t FROM sales WHERE $where")->fetch_assoc();
 $pending_sales = $db->query("SELECT COUNT(*) as c FROM sales WHERE $where AND sale_type='credito' AND status!='pagada'")->fetch_assoc()['c'];
 $active_loans = $db->query("SELECT COUNT(*) as c FROM loans WHERE $where AND status='activo'")->fetch_assoc()['c'];
 ?>
@@ -44,7 +44,7 @@ $active_loans = $db->query("SELECT COUNT(*) as c FROM loans WHERE $where AND sta
         <div class="col-md-3 mb-3">
             <div class="stat-card bg-gradient-warning">
                 <h3><?= number_format($total_sales['t'], 2) ?>$</h3>
-                <small>Ventas en EURO</small>
+                <small>Ventas en Efectivo $</small>
             </div>
         </div>
     </div>
@@ -76,13 +76,13 @@ $active_loans = $db->query("SELECT COUNT(*) as c FROM loans WHERE $where AND sta
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-sm mb-0">
-                            <thead><tr><th>Cliente</th><th>Total EURO</th><th>Tipo</th><th>Estado</th><th>Fecha</th></tr></thead>
+                            <thead><tr><th>Cliente</th><th>Total $</th><th>Tipo</th><th>Estado</th><th>Fecha</th></tr></thead>
                             <tbody>
                                 <?php $recent = $db->query("SELECT s.*, c.name as client_name FROM sales s JOIN clients c ON c.id=s.client_id WHERE $where ORDER BY s.id DESC LIMIT 5"); ?>
                                 <?php while($r = $recent->fetch_assoc()): ?>
                                 <tr>
                                     <td><?= h($r['client_name']) ?></td>
-                                    <td>$<?= number_format($r['total_eur'],2) ?></td>
+                                    <td>$<?= number_format($r['total_efectivo'],2) ?></td>
                                     <td><span class="badge bg-<?= $r['sale_type']=='contado'?'success':'warning' ?>"><?= $r['sale_type'] ?></span></td>
                                     <td><span class="badge bg-<?= $r['status']=='pagada'?'success':($r['status']=='pendiente'?'danger':'info') ?>"><?= $r['status'] ?></span></td>
                                     <td><?= date('d/m/Y', strtotime($r['created_at'])) ?></td>
