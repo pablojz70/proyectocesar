@@ -1,0 +1,51 @@
+body { background-color: #f8f9fa; }
+.card { border: none; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
+.card-header { background-color: #fff; border-bottom: 2px solid #f0f0f0; font-weight: 600; }
+.btn { border-radius: 8px; }
+.table th { font-weight: 600; color: #495057; }
+.stat-card { border-radius: 10px; padding: 20px; color: white; }
+.stat-card h3 { margin: 0; font-size: 2rem; }
+.stat-card small { opacity: 0.9; }
+.bg-gradient-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.bg-gradient-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+.bg-gradient-info { background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%); }
+.bg-gradient-warning { background: linear-gradient(135deg, #f12711 0%, #f5af19 100%); }
+.bg-gradient-danger { background: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%); }
+.search-box { max-width: 400px; }
+@media print { .no-print { display: none !important; } }
+
+#wrapper { display: flex; min-height: 100vh; }
+.sidebar {
+    width: 240px;
+    min-width: 240px;
+    background-color: #d9d9d9;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #c0c0c0;
+}
+.sidebar-header {
+    padding: 18px 16px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #c0c0c0;
+}
+.sidebar-header a { color: #000; text-decoration: none; }
+.sidebar-nav { flex: 1; padding: 8px 0; }
+.sidebar-nav .nav-link {
+    color: #000;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.sidebar-nav .nav-link:hover { background-color: #c0c0c0; color: #000; }
+.sidebar-nav .nav-link i { font-size: 1.1rem; }
+.sidebar-footer {
+    padding: 12px 16px;
+    border-top: 1px solid #c0c0c0;
+}
+.sidebar-footer .nav-link { color: #000; padding: 6px 0; }
+.sidebar-footer .nav-link:hover { color: #333; }
+#page-content-wrapper { flex: 1; padding: 0 20px 20px; min-width: 0; }
+.dropdown-menu-dark .dropdown-item { color: #ccc; }
+.dropdown-menu-dark .dropdown-item:hover { color: #fff; background-color: #555; }

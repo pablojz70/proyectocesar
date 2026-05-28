@@ -1,0 +1,119 @@
+<?php
+require_once '../../config/database.php';
+$page_title = 'Historial de Préstamos';
+require_once '../../includes/header.php';
+
+$db = getDB();
+$user_id = $_SESSION['user_id'];
+$is_admin = isAdmin();
+$where = $is_admin ? "1=1" : "l.user_id = $user_id";
+
+$search_client = intval($_GET['client_id'] ?? 0);
+$estado = $_GET['estado'] ?? '';
+$fecha_desde = $_GET['fecha_desde'] ?? '';
+$fecha_hasta = $_GET['fecha_hasta'] ?? '';
+
+if ($search_client > 0) $where .= " AND l.client_id = $search_client";
+if ($estado) $where .= " AND l.status = '$estado'";
+if ($fecha_desde) $where .= " AND DATE(l.created_at) >= '$fecha_desde'";
+if ($fecha_hasta) $where .= " AND DATE(l.created_at) <= '$fecha_hasta'";
+
+$loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif FROM loans l JOIN clients c ON c.id=l.client_id WHERE $where ORDER BY l.id DESC");
+?>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Historial de Préstamos</h4>
+        <div class="no-print">
+            <button class="btn btn-secondary" onclick="printDiv('print-area')"><i class="bi bi-printer"></i></button>
+            <button class="btn btn-success" onclick="exportToExcel('loans-table', 'prestamos_<?= date('Ymd') ?>')"><i class="bi bi-file-earmark-excel"></i></button>
+            <a href="register.php" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Nuevo Préstamo</a>
+        </div>
+    </div>
+    <div class="card mb-3 no-print">
+        <div class="card-body">
+            <form method="GET" class="row g-2">
+                <div class="col-md-2">
+                    <label class="form-label">Cliente</label>
+                    <select name="client_id" class="form-select">
+                        <option value="">Todos</option>
+                        <?php $clients = $db->query("SELECT DISTINCT c.id, c.name FROM loans l JOIN clients c ON c.id=l.client_id WHERE $where GROUP BY c.id ORDER BY c.name"); ?>
+                        <?php while($c = $clients->fetch_assoc()): ?>
+                        <option value="<?= $c['id'] ?>" <?= $search_client==$c['id']?'selected':'' ?>><?= h($c['name']) ?></option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="activo" <?= $estado=='activo'?'selected':'' ?>>Activo</option>
+                        <option value="pagado" <?= $estado=='pagado'?'selected':'' ?>>Pagado</option>
+                        <option value="vencido" <?= $estado=='vencido'?'selected':'' ?>>Vencido</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Desde</label>
+                    <input type="date" name="fecha_desde" class="form-control" value="<?= $fecha_desde ?>">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Hasta</label>
+                    <input type="date" name="fecha_hasta" class="form-control" value="<?= $fecha_hasta ?>">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="card" id="print-area">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="loans-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Cliente</th>
+                            <th>Monto</th>
+                            <th>Interés</th>
+                            <th>Total</th>
+                            <th>Cuota</th>
+                            <th>Plazo</th>
+                            <th>Moneda</th>
+                            <th>Estado</th>
+                            <th>Inicio</th>
+                            <th class="no-print">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if ($loans->num_rows === 0): ?>
+                        <tr><td colspan="11" class="text-center py-4 text-muted">No hay préstamos registrados</td></tr>
+                        <?php endif; ?>
+                        <?php while($l = $loans->fetch_assoc()): ?>
+                        <tr>
+                            <td><?= $l['id'] ?></td>
+                            <td><?= h($l['client_name']) ?></td>
+                            <td><?= number_format($l['amount'],2) ?></td>
+                            <td><?= number_format($l['total_interest'],2) ?> (<?= $l['interest_rate'] ?>%)</td>
+                            <td><strong><?= number_format($l['total_amount'],2) ?></strong></td>
+                            <td><?= number_format($l['monthly_payment'],2) ?></td>
+                            <td><?= $l['term_months'] ?> meses</td>
+                            <td><?= $l['currency'] ?></td>
+                            <td>
+                                <span class="badge bg-<?= $l['status']=='activo'?'warning':($l['status']=='pagado'?'success':'danger') ?>">
+                                    <?= $l['status'] ?>
+                                </span>
+                            </td>
+                            <td><?= date('d/m/Y', strtotime($l['start_date'])) ?></td>
+                            <td class="no-print">
+                                <a href="collect.php?loan_id=<?= $l['id'] ?>" class="btn btn-sm btn-success" title="Cobrar"><i class="bi bi-cash"></i></a>
+                            </td>
+                        </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<?php require_once '../../includes/footer.php'; ?>
