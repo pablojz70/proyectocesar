@@ -13,12 +13,15 @@ $result = $db->query("SELECT * FROM products WHERE $where ORDER BY name ASC");
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="mb-0">Gesti&oacute;n de Productos</h4>
-        <a href="create.php" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Nuevo Producto</a>
+        <div>
+            <button class="btn btn-success" onclick="exportToExcel('products-table', 'productos_<?= date('Ymd') ?>')"><i class="bi bi-file-earmark-excel"></i> Exportar Excel</button>
+            <a href="create.php" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Nuevo Producto</a>
+        </div>
     </div>
     <div class="card">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
+                <table class="table table-hover mb-0" id="products-table">
                     <thead>
                         <tr>
                             <th>Tipo</th>
