@@ -16,8 +16,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $payment_currency = $_POST['payment_currency'];
     $installments = intval($_POST['installments'] ?? 1);
     $exchange_rate = floatval($_POST['exchange_rate'] ?? 0);
-    $product_ids = $_POST['product_id'] ?? [];
-    $quantities = $_POST['quantity'] ?? [];
+
+    if ($payment_currency === 'BCV' && $exchange_rate <= 0) {
+        $_SESSION['error'] = 'Debe ingresar la tasa de cambio para pago en BCV';
+        redirect('/modules/sales/register.php');
+    }
 
     $total_efectivo = 0;
     $total_euro = 0;
@@ -115,7 +118,7 @@ $rate = getExchangeRate();
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-md-4">
+                    <div class="col-md-4" id="exchange_rate_div" style="display:none">
                         <label class="form-label">Tasa de Cambio (Bs/Divisa)</label>
                         <div class="input-group">
                             <input type="number" name="exchange_rate" id="exchange_rate" class="form-control" step="0.01" min="0" value="<?= $rate ?>">
@@ -123,7 +126,7 @@ $rate = getExchangeRate();
                         </div>
                         <small class="text-muted" id="tasa_info"><?= $rate ? "Tasa actual: Bs. ".number_format($rate,2) : "Ingrese tasa manual" ?></small>
                     </div>
-                    <div class="col-md-2" id="installments_div">
+                    <div class="col-md-2" id="installments_div" style="display:none">
                         <label class="form-label">N&deg; Cuotas</label>
                         <input type="number" name="installments" class="form-control" value="1" min="1">
                     </div>
@@ -251,7 +254,10 @@ attachEvents(document.querySelector('.sale-row'));
 document.querySelector('[name=sale_type]').addEventListener('change', function() {
     document.getElementById('installments_div').style.display = this.value === 'credito' ? 'block' : 'none';
 });
-document.getElementById('installments_div').style.display = 'none';
+
+document.querySelector('[name=payment_currency]').addEventListener('change', function() {
+    document.getElementById('exchange_rate_div').style.display = this.value === 'BCV' ? 'block' : 'none';
+});
 
 function fetchTasa() {
     fetch('<?= BASE_URL ?>/api/get_exchange_rate.php')
