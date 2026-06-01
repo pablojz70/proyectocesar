@@ -31,7 +31,11 @@ function isSeller() {
 }
 
 function redirect($url) {
-    header("Location: " . BASE_URL . $url);
+    if (!headers_sent()) {
+        header("Location: " . BASE_URL . $url);
+    } else {
+        echo '<script>window.location.href="' . BASE_URL . $url . '";</script>';
+    }
     exit;
 }
 
