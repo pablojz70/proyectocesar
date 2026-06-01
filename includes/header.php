@@ -16,26 +16,26 @@
             <a href="<?= BASE_URL ?>/dashboard.php">💰 Ventas y Créditos</a>
         </div>
         <ul class="nav flex-column sidebar-nav">
-            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/dashboard.php"><i class="bi bi-speedometer2"></i> Inicio</a></li>
-            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/clients/list.php"><i class="bi bi-people"></i> Clientes</a></li>
-            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/products/list.php"><i class="bi bi-box"></i> Productos</a></li>
-            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/sales/register.php"><i class="bi bi-cart-plus"></i> Vender</a></li>
-            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/sales/history.php"><i class="bi bi-receipt"></i> Ventas</a></li>
-            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/payments/consult_debt.php"><i class="bi bi-credit-card"></i> Cobranzas</a></li>
-            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/loans/register.php"><i class="bi bi-bank"></i> Préstamos</a></li>
-            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/loans/history.php"><i class="bi bi-clock-history"></i> Hist. Préstamos</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/dashboard.php"><img src="<?= BASE_URL ?>/imagen/1inicio.png" class="sidebar-icon" alt=""> Inicio</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/clients/list.php"><img src="<?= BASE_URL ?>/imagen/2clientes.png" class="sidebar-icon" alt=""> Clientes</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/products/list.php"><img src="<?= BASE_URL ?>/imagen/3productos.png" class="sidebar-icon" alt=""> Productos</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/sales/register.php"><img src="<?= BASE_URL ?>/imagen/4vender.png" class="sidebar-icon" alt=""> Vender</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/sales/history.php"><img src="<?= BASE_URL ?>/imagen/5ventas.png" class="sidebar-icon" alt=""> Ventas</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/payments/consult_debt.php"><img src="<?= BASE_URL ?>/imagen/6cobranza.png" class="sidebar-icon" alt=""> Cobranzas</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/loans/register.php"><img src="<?= BASE_URL ?>/imagen/7prestamos.png" class="sidebar-icon" alt=""> Pr&eacute;stamos</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/loans/history.php"><img src="<?= BASE_URL ?>/imagen/8historial.png" class="sidebar-icon" alt=""> Hist. Pr&eacute;stamos</a></li>
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-file-earmark-bar-graph"></i> Reportes</a>
+                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><img src="<?= BASE_URL ?>/imagen/9reportes.png" class="sidebar-icon" alt=""> Reportes</a>
                 <ul class="dropdown-menu dropdown-menu-dark">
                     <li><a class="dropdown-item" href="<?= BASE_URL ?>/modules/reports/sales.php">Ventas</a></li>
                     <li><a class="dropdown-item" href="<?= BASE_URL ?>/modules/reports/profitability.php">Rentabilidad</a></li>
                     <li><a class="dropdown-item" href="<?= BASE_URL ?>/modules/reports/inventory.php">Inventario</a></li>
                     <li><a class="dropdown-item" href="<?= BASE_URL ?>/modules/reports/collections.php">Cobranzas</a></li>
-                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/modules/loans/report.php">Préstamos</a></li>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/modules/loans/report.php">Pr&eacute;stamos</a></li>
                 </ul>
             </li>
             <?php if (isAdmin()): ?>
-            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/users/list.php"><i class="bi bi-gear"></i> Usuarios</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/users/list.php"><img src="<?= BASE_URL ?>/imagen/10usuarios.png" class="sidebar-icon" alt=""> Usuarios</a></li>
             <?php endif; ?>
         </ul>
         <div class="sidebar-footer">
