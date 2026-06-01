@@ -92,13 +92,13 @@ $rate = getExchangeRate();
                     <div class="col-md-6">
                         <label class="form-label">Cliente <span class="text-danger">*</span></label>
                         <div class="input-group">
-                            <select name="client_id" class="form-select" required>
+                            <select name="client_id" id="client_select" class="form-select" required>
                                 <option value="">Seleccionar cliente...</option>
-                                <?php while($c = $clients->fetch_assoc()): ?>
+                                <?php mysqli_data_seek($clients, 0); while($c = $clients->fetch_assoc()): ?>
                                 <option value="<?= $c['id'] ?>"><?= h($c['name']) ?> - <?= h($c['cedula_rif']) ?></option>
                                 <?php endwhile; ?>
                             </select>
-                            <a href="../clients/create.php" class="btn btn-outline-primary" target="_blank">+ Nuevo</a>
+                            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#nuevoClienteModal">+ Nuevo</button>
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -270,4 +270,66 @@ function fetchTasa() {
         });
 }
 </script>
-<?php require_once '../../includes/footer.php'; ?>
+
+<div class="modal fade" id="nuevoClienteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuevo Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newClientForm">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre Completo <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">C&eacute;dula / RIF <span class="text-danger">*</span></label>
+                        <input type="text" name="cedula_rif" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tel&eacute;fono</label>
+                        <input type="text" name="phone" class="form-control">
+                    </div>
+                    <div id="newClientMsg"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="saveNewClient()">Guardar Cliente</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function saveNewClient() {
+    var form = document.getElementById('newClientForm');
+    var data = new FormData(form);
+    var btn = document.querySelector('#nuevoClienteModal .btn-primary');
+    btn.disabled = true;
+    btn.innerHTML = 'Guardando...';
+
+    fetch('<?= BASE_URL ?>/api/create_client.php', { method: 'POST', body: data })
+        .then(r => r.json())
+        .then(d => {
+            if (d.ok) {
+                var sel = document.getElementById('client_select');
+                var opt = document.createElement('option');
+                opt.value = d.id;
+                opt.text = d.name + ' - ' + d.cedula;
+                sel.add(opt);
+                sel.value = d.id;
+                var modal = bootstrap.Modal.getInstance(document.getElementById('nuevoClienteModal'));
+                modal.hide();
+                form.reset();
+                document.getElementById('newClientMsg').innerHTML = '';
+            } else {
+                document.getElementById('newClientMsg').innerHTML = '<div class="alert alert-danger">' + d.error + '</div>';
+            }
+            btn.disabled = false;
+            btn.innerHTML = 'Guardar Cliente';
+        });
+}
+</script><?php require_once '../../includes/footer.php'; ?>
