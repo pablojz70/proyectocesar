@@ -1,7 +1,5 @@
 <?php
 require_once '../../config/database.php';
-$page_title = 'Nuevo Producto';
-require_once '../../includes/header.php';
 
 $upload_dir = $_SERVER['DOCUMENT_ROOT'] . BASE_URL . '/uploads/products/';
 if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
@@ -39,6 +37,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['error'] = 'Error: ' . $db->error;
     }
 }
+
+$page_title = 'Nuevo Producto';
+require_once '../../includes/header.php';
 ?>
 <div class="container-fluid">
     <h4 class="mb-3">Nuevo Producto</h4>

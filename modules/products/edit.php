@@ -1,7 +1,5 @@
 <?php
 require_once '../../config/database.php';
-$page_title = 'Editar Producto';
-require_once '../../includes/header.php';
 
 $db = getDB();
 $id = intval($_GET['id'] ?? 0);
@@ -49,6 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+$page_title = 'Editar Producto';
+require_once '../../includes/header.php';
 $foto_url = $product['foto'] ? BASE_URL . '/uploads/products/' . $product['foto'] : '';
 $archivo_url = $product['archivo'] ? BASE_URL . '/uploads/products/' . $product['archivo'] : '';
 ?>
