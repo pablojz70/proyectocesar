@@ -26,23 +26,23 @@ $result = $db->query("SELECT * FROM products WHERE $where ORDER BY name ASC");
                         <tr>
                             <th>Tipo</th>
                             <th>Nombre</th>
-                            <th>Descripci&oacute;n</th>
                             <th>Stock</th>
                             <th>Efectivo (Divisa)</th>
                             <th>EURO</th>
                             <th>Bs</th>
+                            <th>Foto</th>
+                            <th>Archivo</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if ($result->num_rows === 0): ?>
-                        <tr><td colspan="8" class="text-center py-4 text-muted">No hay productos registrados</td></tr>
+                        <tr><td colspan="9" class="text-center py-4 text-muted">No hay productos registrados</td></tr>
                         <?php endif; ?>
                         <?php while($row = $result->fetch_assoc()): ?>
                         <tr>
                             <td><span class="badge bg-secondary"><?= h($row['type']) ?></span></td>
                             <td><strong><?= h($row['name']) ?></strong></td>
-                            <td><small class="text-muted"><?= h(substr($row['description'] ?? '', 0, 60)) ?></small></td>
                             <td>
                                 <span class="badge bg-<?= $row['stock'] > 10 ? 'success' : ($row['stock'] > 0 ? 'warning' : 'danger') ?>">
                                     <?= $row['stock'] ?>
@@ -51,6 +51,8 @@ $result = $db->query("SELECT * FROM products WHERE $where ORDER BY name ASC");
                             <td>$<?= number_format($row['price_efectivo'], 2) ?></td>
                             <td>€<?= number_format($row['price_euro'], 2) ?></td>
                             <td>Bs. <?= number_format($row['price_bcv'], 2) ?></td>
+                            <td><?php if ($row['foto']): ?><a href="<?= BASE_URL ?>/uploads/products/<?= $row['foto'] ?>" target="_blank"><img src="<?= BASE_URL ?>/uploads/products/<?= $row['foto'] ?>" style="width:40px;height:40px;object-fit:cover;border-radius:5px" alt="Foto"></a><?php else: ?><span class="text-muted">-</span><?php endif; ?></td>
+                            <td><?php if ($row['archivo']): ?><a href="<?= BASE_URL ?>/uploads/products/<?= $row['archivo'] ?>" target="_blank" class="btn btn-sm btn-outline-info"><i class="bi bi-file-earmark"></i></a><?php else: ?><span class="text-muted">-</span><?php endif; ?></td>
                             <td>
                                 <a href="edit.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
                                 <a href="delete.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirmDelete('¿Eliminar este producto?')"><i class="bi bi-trash"></i></a>
