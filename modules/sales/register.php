@@ -1,7 +1,5 @@
 <?php
 require_once '../../config/database.php';
-$page_title = 'Registrar Venta';
-require_once '../../includes/header.php';
 
 $db = getDB();
 $user_id = $_SESSION['user_id'];
@@ -16,6 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $payment_currency = $_POST['payment_currency'];
     $installments = intval($_POST['installments'] ?? 1);
     $exchange_rate = floatval($_POST['exchange_rate'] ?? 0);
+    $product_ids = $_POST['product_id'] ?? [];
+    $quantities = $_POST['quantity'] ?? [];
 
     if ($payment_currency === 'BCV' && $exchange_rate <= 0) {
         $_SESSION['error'] = 'Debe ingresar la tasa de cambio para pago en BCV';
@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $stmt = $db->prepare("INSERT INTO sales (user_id, client_id, sale_type, payment_currency, exchange_rate, total_efectivo, total_euro, total_bs, status, installments) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $status = $sale_type === 'contado' ? 'pagada' : 'pendiente';
-        $stmt->bind_param("iissddddds", $user_id, $client_id, $sale_type, $payment_currency, $exchange_rate, $total_efectivo, $total_euro, $total_bs, $status, $installments);
+        $stmt->bind_param("iissddddsi", $user_id, $client_id, $sale_type, $payment_currency, $exchange_rate, $total_efectivo, $total_euro, $total_bs, $status, $installments);
         $stmt->execute();
         $sale_id = $db->insert_id;
 
@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($sale_type === 'contado') {
             $stmt3 = $db->prepare("INSERT INTO payments (sale_id, amount_efectivo, amount_euro, amount_bs, exchange_rate) VALUES (?, ?, ?, ?, ?)");
-            $stmt3->bind_param("idddd", $sale_id, $total_efectivo, $total_euro, $total_bs, $exchange_rate);
+            $stmt3->bind_param("iiddd", $sale_id, $total_efectivo, $total_euro, $total_bs, $exchange_rate);
             $stmt3->execute();
         }
 
@@ -80,6 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+$page_title = 'Registrar Venta';
+require_once '../../includes/header.php';
 $clients = $db->query("SELECT * FROM clients WHERE $where ORDER BY name ASC");
 $rate = getExchangeRate();
 ?>

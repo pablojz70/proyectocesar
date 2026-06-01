@@ -20,7 +20,7 @@
             <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/clients/list.php"><img src="<?= BASE_URL ?>/imagen/2clientes.png" class="sidebar-icon" alt=""> Clientes</a></li>
             <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/products/list.php"><img src="<?= BASE_URL ?>/imagen/3productos.png" class="sidebar-icon" alt=""> Productos</a></li>
             <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/sales/register.php"><img src="<?= BASE_URL ?>/imagen/4vender.png" class="sidebar-icon" alt=""> Vender Productos</a></li>
-            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/sales/history.php"><img src="<?= BASE_URL ?>/imagen/5ventas.png" class="sidebar-icon" alt=""> Ventas</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/sales/history.php"><img src="<?= BASE_URL ?>/imagen/5ventas.png" class="sidebar-icon" alt=""> Historial de Ventas</a></li>
             <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/payments/consult_debt.php"><img src="<?= BASE_URL ?>/imagen/6cobranza.png" class="sidebar-icon" alt=""> Cobranzas</a></li>
             <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/loans/register.php"><img src="<?= BASE_URL ?>/imagen/7prestamos.png" class="sidebar-icon" alt=""> Pr&eacute;stamos</a></li>
             <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/loans/history.php"><img src="<?= BASE_URL ?>/imagen/8historial.png" class="sidebar-icon" alt=""> Hist. Pr&eacute;stamos</a></li>
