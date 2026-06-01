@@ -103,14 +103,14 @@ $rate = getExchangeRate();
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Tipo de Venta <span class="text-danger">*</span></label>
-                        <select name="sale_type" class="form-select" required>
+                        <select name="sale_type" id="sale_type" class="form-select" required onchange="toggleFields()">
                             <option value="contado">Contado</option>
                             <option value="credito">Cr&eacute;dito</option>
                         </select>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Tipo de Pago <span class="text-danger">*</span></label>
-                        <select name="payment_currency" class="form-select" required>
+                        <select name="payment_currency" id="payment_currency" class="form-select" required onchange="toggleFields()">
                             <option value="EFECTIVO">Efectivo (Divisa) $</option>
                             <option value="EURO">EURO €</option>
                             <option value="BCV">BCV (Bol&iacute;vares)</option>
@@ -251,13 +251,13 @@ function attachEvents(row) {
 }
 attachEvents(document.querySelector('.sale-row'));
 
-document.querySelector('[name=sale_type]').addEventListener('change', function() {
-    document.getElementById('installments_div').style.display = this.value === 'credito' ? 'block' : 'none';
-});
-
-document.querySelector('[name=payment_currency]').addEventListener('change', function() {
-    document.getElementById('exchange_rate_div').style.display = this.value === 'BCV' ? 'block' : 'none';
-});
+function toggleFields() {
+    var idiv = document.getElementById('installments_div');
+    var ediv = document.getElementById('exchange_rate_div');
+    if (idiv) idiv.style.display = document.getElementById('sale_type').value === 'credito' ? 'block' : 'none';
+    if (ediv) ediv.style.display = document.getElementById('payment_currency').value === 'BCV' ? 'block' : 'none';
+}
+toggleFields();
 
 function fetchTasa() {
     fetch('<?= BASE_URL ?>/api/get_exchange_rate.php')
