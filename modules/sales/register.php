@@ -89,7 +89,7 @@ $rate = getExchangeRate();
     <h4 class="mb-3">Registrar Venta</h4>
     <div class="card">
         <div class="card-body">
-            <form method="POST" id="saleForm">
+            <form method="POST" id="saleForm" novalidate>
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Cliente <span class="text-danger">*</span></label>
