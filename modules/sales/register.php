@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ];
             $total_efectivo += $qty * $prod['price_efectivo'];
             $total_euro += $qty * $prod['price_euro'];
-            $total_bs += $qty * $prod['price_bcv'];
+            $total_bs += $qty * $prod['price_bcv'] * $exchange_rate;
         }
 
         if (empty($items)) throw new Exception("Debe agregar al menos un producto");
@@ -146,11 +146,11 @@ $rate = getExchangeRate();
                                         <th>Producto</th>
                                         <th>Efectivo $</th>
                                         <th>EURO €</th>
-                                        <th>Bs</th>
+                                        <th>BCV Ref</th>
                                         <th>Cantidad</th>
                                         <th>Subtotal $</th>
                                         <th>Subtotal €</th>
-                                        <th>Subtotal Bs</th>
+                                        <th>Total (Tasa&times;Ref)</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -258,8 +258,11 @@ function toggleFields() {
     var ediv = document.getElementById('exchange_rate_div');
     if (idiv) idiv.style.display = document.getElementById('sale_type').value === 'credito' ? 'block' : 'none';
     if (ediv) ediv.style.display = document.getElementById('payment_currency').value === 'BCV' ? 'block' : 'none';
+    calcTotals();
 }
 toggleFields();
+
+document.getElementById('exchange_rate').addEventListener('input', calcTotals);
 
 function fetchTasa() {
     fetch('<?= BASE_URL ?>/api/get_exchange_rate.php')

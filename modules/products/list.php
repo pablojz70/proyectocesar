@@ -29,7 +29,7 @@ $result = $db->query("SELECT * FROM products WHERE $where ORDER BY name ASC");
                             <th>Stock</th>
                             <th>Efectivo (Divisa)</th>
                             <th>EURO</th>
-                            <th>Bs</th>
+                            <th>BCV</th>
                             <th>Foto</th>
                             <th>Archivo</th>
                             <th>Acciones</th>
@@ -50,7 +50,7 @@ $result = $db->query("SELECT * FROM products WHERE $where ORDER BY name ASC");
                             </td>
                             <td>$<?= number_format($row['price_efectivo'], 2) ?></td>
                             <td>€<?= number_format($row['price_euro'], 2) ?></td>
-                            <td>Bs. <?= number_format($row['price_bcv'], 2) ?></td>
+                            <td>Ref. <?= number_format($row['price_bcv'], 2) ?></td>
                             <td><?php if ($row['foto']): ?><a href="<?= BASE_URL ?>/uploads/products/<?= $row['foto'] ?>" target="_blank"><img src="<?= BASE_URL ?>/uploads/products/<?= $row['foto'] ?>" style="width:40px;height:40px;object-fit:cover;border-radius:5px" alt="Foto"></a><?php else: ?><span class="text-muted">-</span><?php endif; ?></td>
                             <td><?php if ($row['archivo']): ?><a href="<?= BASE_URL ?>/uploads/products/<?= $row['archivo'] ?>" target="_blank" class="btn btn-sm btn-outline-info"><i class="bi bi-file-earmark"></i></a><?php else: ?><span class="text-muted">-</span><?php endif; ?></td>
                             <td>

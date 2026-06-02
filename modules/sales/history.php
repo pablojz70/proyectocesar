@@ -19,7 +19,15 @@ if ($client_id > 0) $where .= " AND s.client_id = $client_id";
 if ($tipo) $where .= " AND s.sale_type = '$tipo'";
 if ($estado) $where .= " AND s.status = '$estado'";
 
-$sales = $db->query("SELECT s.*, c.name as client_name FROM sales s JOIN clients c ON c.id=s.client_id WHERE $where ORDER BY s.id DESC");
+$sales = $db->query("SELECT s.*, c.name as client_name,
+    GROUP_CONCAT(DISTINCT p.name SEPARATOR ', ') as productos
+    FROM sales s
+    JOIN clients c ON c.id=s.client_id
+    LEFT JOIN sale_items si ON si.sale_id=s.id
+    LEFT JOIN products p ON p.id=si.product_id
+    WHERE $where
+    GROUP BY s.id
+    ORDER BY s.id DESC");
 ?>
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -73,11 +81,10 @@ $sales = $db->query("SELECT s.*, c.name as client_name FROM sales s JOIN clients
                         <tr>
                             <th>#</th>
                             <th>Cliente</th>
-                            <th>Efectivo $</th>
-                            <th>EURO €</th>
-                            <th>Bs</th>
+                            <th>Producto</th>
                             <th>Tipo</th>
                             <th>Pago</th>
+                            <th>Deuda</th>
                             <th>Estado</th>
                             <th>Cuotas</th>
                             <th>Fecha</th>
@@ -86,17 +93,29 @@ $sales = $db->query("SELECT s.*, c.name as client_name FROM sales s JOIN clients
                     </thead>
                     <tbody>
                         <?php if ($sales->num_rows === 0): ?>
-                        <tr><td colspan="11" class="text-center py-4 text-muted">No hay ventas en este per&iacute;odo</td></tr>
+                        <tr><td colspan="10" class="text-center py-4 text-muted">No hay ventas en este per&iacute;odo</td></tr>
                         <?php endif; ?>
-                        <?php while($s = $sales->fetch_assoc()): ?>
+                        <?php while($s = $sales->fetch_assoc()):
+                            $deuda = '';
+                            $deuda_valor = 0;
+                            if ($s['payment_currency'] === 'EFECTIVO') {
+                                $deuda = '$' . number_format($s['total_efectivo'], 2);
+                                $deuda_valor = $s['total_efectivo'];
+                            } elseif ($s['payment_currency'] === 'EURO') {
+                                $deuda = '€' . number_format($s['total_euro'], 2);
+                                $deuda_valor = $s['total_euro'];
+                            } else {
+                                $deuda = 'Bs. ' . number_format($s['total_bs'], 2);
+                                $deuda_valor = $s['total_bs'];
+                            }
+                        ?>
                         <tr>
                             <td><?= $s['id'] ?></td>
                             <td><?= h($s['client_name']) ?></td>
-                            <td>$<?= $s['total_efectivo'] > 0 ? number_format($s['total_efectivo'],2) : '-' ?></td>
-                            <td>€<?= $s['total_euro'] > 0 ? number_format($s['total_euro'],2) : '-' ?></td>
-                            <td>Bs. <?= $s['total_bs'] > 0 ? number_format($s['total_bs'],2) : '-' ?></td>
+                            <td><small><?= h(substr($s['productos'] ?? '', 0, 60)) ?></small></td>
                             <td><span class="badge bg-<?= $s['sale_type']=='contado'?'success':'warning' ?>"><?= $s['sale_type'] ?></span></td>
                             <td><span class="badge bg-secondary"><?= $s['payment_currency'] ?></span></td>
+                            <td><strong><?= $deuda ?></strong></td>
                             <td>
                                 <span class="badge bg-<?= $s['status']=='pagada'?'success':($s['status']=='pendiente'?'danger':'info') ?>">
                                     <?= $s['status'] ?>

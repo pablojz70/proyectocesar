@@ -54,7 +54,7 @@ $payments = $db->query("SELECT * FROM payments WHERE sale_id=$id ORDER BY paymen
                 <div class="table-responsive">
                     <table class="table mb-0">
                         <thead>
-                            <tr><th>Producto</th><th>Cantidad</th><th>Efectivo $</th><th>EURO €</th><th>Bs</th><th>Subtotal $</th><th>Subtotal €</th><th>Subtotal Bs</th></tr>
+                            <tr><th>Producto</th><th>Cantidad</th><th>Efectivo $</th><th>EURO €</th><th>BCV Ref</th><th>Subtotal $</th><th>Subtotal €</th><th>Total (Tasa&times;Ref)</th></tr>
                         </thead>
                         <tbody>
                             <?php while($item = $items->fetch_assoc()): ?>
@@ -63,10 +63,10 @@ $payments = $db->query("SELECT * FROM payments WHERE sale_id=$id ORDER BY paymen
                                 <td><?= $item['quantity'] ?></td>
                                 <td>$<?= number_format($item['unit_price_efectivo'],2) ?></td>
                                 <td>€<?= number_format($item['unit_price_euro'],2) ?></td>
-                                <td>Bs. <?= number_format($item['unit_price_bs'],2) ?></td>
+                                <td>Ref. <?= number_format($item['unit_price_bs'],2) ?></td>
                                 <td>$<?= number_format($item['quantity']*$item['unit_price_efectivo'],2) ?></td>
                                 <td>€<?= number_format($item['quantity']*$item['unit_price_euro'],2) ?></td>
-                                <td>Bs. <?= number_format($item['quantity']*$item['unit_price_bs'],2) ?></td>
+                                <td>Bs. <?= number_format($item['quantity']*$item['unit_price_bs']*$sale['exchange_rate'],2) ?></td>
                             </tr>
                             <?php endwhile; ?>
                         </tbody>
@@ -88,7 +88,7 @@ $payments = $db->query("SELECT * FROM payments WHERE sale_id=$id ORDER BY paymen
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table mb-0">
-                        <thead><tr><th>#</th><th>Efectivo $</th><th>EURO €</th><th>Bs</th><th>Tasa</th><th>Fecha</th></tr></thead>
+                        <thead><tr><th>#</th><th>Efectivo $</th><th>EURO €</th><th>BCV Ref</th><th>Tasa</th><th>Fecha</th></tr></thead>
                         <tbody>
                             <?php if ($payments->num_rows === 0): ?>
                             <tr><td colspan="6" class="text-center text-muted">Sin pagos registrados</td></tr>

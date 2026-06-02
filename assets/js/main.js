@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function calcTotals() {
     const rows = document.querySelectorAll('.sale-row');
+    const rateInput = document.getElementById('exchange_rate');
+    const tasa = rateInput ? parseFloat(rateInput.value) || 0 : 0;
     let totalEfectivo = 0;
     let totalEuro = 0;
     let totalBs = 0;
@@ -18,7 +20,7 @@ function calcTotals() {
         const priceBs = parseFloat(row.querySelector('.price-bs').dataset.value) || 0;
         const subtotalEfectivo = qty * priceEfectivo;
         const subtotalEuro = qty * priceEuro;
-        const subtotalBs = qty * priceBs;
+        const subtotalBs = qty * priceBs * (tasa > 0 ? tasa : 1);
         row.querySelector('.subtotal-efectivo').textContent = subtotalEfectivo.toFixed(2);
         row.querySelector('.subtotal-euro').textContent = subtotalEuro.toFixed(2);
         row.querySelector('.subtotal-bs').textContent = subtotalBs.toFixed(2);
