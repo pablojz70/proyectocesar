@@ -62,7 +62,7 @@ if ($client_id > 0) {
         $field = 'total_efectivo';
         $sym = '$';
         if ($r['payment_currency'] === 'EURO') { $field = 'total_euro'; $sym = '€'; }
-        if ($r['payment_currency'] === 'BCV') { $field = 'total_bs'; $sym = 'Bs.'; }
+        if ($r['payment_currency'] === 'BCV') { $field = 'total_bs'; $sym = 'Ref'; }
         $paid = $db->query("SELECT COALESCE(SUM(amount_efectivo),0)+COALESCE(SUM(amount_euro),0)+COALESCE(SUM(amount_bs),0) as total FROM payments WHERE sale_id={$r['id']}")->fetch_assoc()['total'];
         $r['saldo'] = $r[$field] - $paid;
         $r['saldo_sym'] = $sym;
@@ -90,12 +90,12 @@ if ($sale_id > 0) {
 function cur_sym($cur) {
     if ($cur === 'EFECTIVO') return '$';
     if ($cur === 'EURO') return '€';
-    return 'Bs.';
+    return 'Ref';
 }
 function cur_label($cur) {
     if ($cur === 'EFECTIVO') return 'Efectivo ($)';
     if ($cur === 'EURO') return 'EURO (€)';
-    return 'Bol&iacute;vares (Bs)';
+    return 'Ref (BCV)';
 }
 ?>
 <div class="container-fluid">
@@ -146,8 +146,8 @@ function cur_label($cur) {
                         <label class="form-label" id="monto_label">Monto a pagar</label>
                         <input type="number" name="monto" id="monto_input" class="form-control" step="0.01" min="0" required>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Tasa (Bs/Divisa)</label>
+                    <div class="col-md-4" id="tasa_div" style="display:none">
+                        <label class="form-label">Tasa (Bs/Ref)</label>
                         <input type="number" name="exchange_rate" class="form-control" step="0.01" min="0" value="<?= getExchangeRate() ?>">
                     </div>
                 </div>
@@ -166,14 +166,16 @@ function actualizarMoneda() {
     var opt = sel.options[sel.selectedIndex];
     var label = document.getElementById('monto_label');
     var input = document.getElementById('monto_input');
+    var tasaDiv = document.getElementById('tasa_div');
     if (opt.value) {
         var cur = opt.dataset.currency;
-        if (cur === 'EFECTIVO') label.textContent = 'Monto a pagar ($)';
-        else if (cur === 'EURO') label.textContent = 'Monto a pagar (€)';
-        else label.textContent = 'Monto a pagar (Bs)';
+        if (cur === 'EFECTIVO') { label.textContent = 'Monto a pagar ($)'; tasaDiv.style.display = 'none'; }
+        else if (cur === 'EURO') { label.textContent = 'Monto a pagar (€)'; tasaDiv.style.display = 'none'; }
+        else { label.textContent = 'Monto a pagar (Ref)'; tasaDiv.style.display = 'block'; }
         input.max = opt.dataset.saldo;
     } else {
         label.textContent = 'Monto a pagar';
+        tasaDiv.style.display = 'none';
     }
 }
 actualizarMoneda();
