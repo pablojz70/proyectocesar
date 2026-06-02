@@ -157,7 +157,7 @@ $rate = getExchangeRate();
                                 <tbody id="products-body">
                                     <tr class="sale-row">
                                         <td>
-                                            <select name="product_id[]" class="form-select product-select" required>
+                                            <select name="product_id[]" class="form-select product-select">
                                                 <option value="">Seleccionar...</option>
                                                 <?php mysqli_data_seek($products, 0); while($p = $products->fetch_assoc()): ?>
                                                 <option value="<?= $p['id'] ?>" data-price-efectivo="<?= $p['price_efectivo'] ?>" data-price-euro="<?= $p['price_euro'] ?>" data-price-bs="<?= $p['price_bcv'] ?>" data-stock="<?= $p['stock'] ?>">
