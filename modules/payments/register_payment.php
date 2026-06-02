@@ -1,16 +1,13 @@
 <?php
 require_once '../../config/database.php';
-$page_title = 'Registrar Pago';
-require_once '../../includes/header.php';
 
 $db = getDB();
 $user_id = $_SESSION['user_id'];
 $is_admin = isAdmin();
+$where_sales = $is_admin ? "1=1" : "s.user_id = $user_id";
 
 $sale_id = intval($_GET['sale_id'] ?? 0);
 $client_id = intval($_GET['client_id'] ?? 0);
-
-$where_sales = $is_admin ? "1=1" : "s.user_id = $user_id";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sale_id_pay = intval($_POST['sale_id']);
@@ -25,10 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sale = $db->query("SELECT * FROM sales s WHERE s.id=$sale_id_pay AND $where_sales")->fetch_assoc();
     if (!$sale) { $_SESSION['error'] = 'Venta no encontrada'; redirect('/modules/payments/consult_debt.php'); }
 
-    $paid_field = 'total_' . strtolower($sale['payment_currency']);
     if ($sale['payment_currency'] === 'EFECTIVO') $paid_field = 'total_efectivo';
-    if ($sale['payment_currency'] === 'EURO') $paid_field = 'total_euro';
-    if ($sale['payment_currency'] === 'BCV') $paid_field = 'total_bs';
+    elseif ($sale['payment_currency'] === 'EURO') $paid_field = 'total_euro';
+    else $paid_field = 'total_bs';
 
     $paid = $db->query("SELECT COALESCE(SUM(amount_efectivo),0)+COALESCE(SUM(amount_euro),0)+COALESCE(SUM(amount_bs),0) as total FROM payments WHERE sale_id=$sale_id_pay")->fetch_assoc()['total'];
     $remaining = $sale[$paid_field] - $paid;
@@ -59,10 +55,9 @@ $sales_list = [];
 if ($client_id > 0) {
     $res = $db->query("SELECT s.*, c.name as client_name FROM sales s JOIN clients c ON c.id=s.client_id WHERE s.client_id=$client_id AND s.sale_type='credito' AND s.status!='pagada' AND $where_sales ORDER BY s.id DESC");
     while($r = $res->fetch_assoc()) {
-        $field = 'total_efectivo';
-        $sym = '$';
-        if ($r['payment_currency'] === 'EURO') { $field = 'total_euro'; $sym = '€'; }
-        if ($r['payment_currency'] === 'BCV') { $field = 'total_bs'; $sym = 'Ref'; }
+        if ($r['payment_currency'] === 'EFECTIVO') { $field = 'total_efectivo'; $sym = '$'; }
+        elseif ($r['payment_currency'] === 'EURO') { $field = 'total_euro'; $sym = '€'; }
+        else { $field = 'total_bs'; $sym = 'Ref'; }
         $paid = $db->query("SELECT COALESCE(SUM(amount_efectivo),0)+COALESCE(SUM(amount_euro),0)+COALESCE(SUM(amount_bs),0) as total FROM payments WHERE sale_id={$r['id']}")->fetch_assoc()['total'];
         $r['saldo'] = $r[$field] - $paid;
         $r['saldo_sym'] = $sym;
@@ -76,10 +71,9 @@ if ($sale_id > 0) {
     if ($single) {
         $client_id = $single['cid'];
         $client = $db->query("SELECT * FROM clients WHERE id=$client_id")->fetch_assoc();
-        $field = 'total_efectivo';
-        $sym = '$';
-        if ($single['payment_currency'] === 'EURO') { $field = 'total_euro'; $sym = '€'; }
-        if ($single['payment_currency'] === 'BCV') { $field = 'total_bs'; $sym = 'Bs.'; }
+        if ($single['payment_currency'] === 'EFECTIVO') { $field = 'total_efectivo'; $sym = '$'; }
+        elseif ($single['payment_currency'] === 'EURO') { $field = 'total_euro'; $sym = '€'; }
+        else { $field = 'total_bs'; $sym = 'Ref'; }
         $paid = $db->query("SELECT COALESCE(SUM(amount_efectivo),0)+COALESCE(SUM(amount_euro),0)+COALESCE(SUM(amount_bs),0) as total FROM payments WHERE sale_id=$sale_id")->fetch_assoc()['total'];
         $single['saldo'] = $single[$field] - $paid;
         $single['saldo_sym'] = $sym;
@@ -87,16 +81,8 @@ if ($sale_id > 0) {
     }
 }
 
-function cur_sym($cur) {
-    if ($cur === 'EFECTIVO') return '$';
-    if ($cur === 'EURO') return '€';
-    return 'Ref';
-}
-function cur_label($cur) {
-    if ($cur === 'EFECTIVO') return 'Efectivo ($)';
-    if ($cur === 'EURO') return 'EURO (€)';
-    return 'Ref (BCV)';
-}
+$page_title = 'Registrar Pago';
+require_once '../../includes/header.php';
 ?>
 <div class="container-fluid">
     <h4 class="mb-3">Registrar Pago</h4>
