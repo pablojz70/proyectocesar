@@ -1,23 +1,25 @@
 <?php
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'sistema_ventas_creditos');
+/**
+ * Configuracion remota para InfinityFree
+ * Completa los datos y visita: http://proyectocesar.infinityfree.me/proyectocesar/setup.php
+ */
+
+// Datos de MySQL InfinityFree (proporcionados por el usuario)
+define('DB_HOST', 'sql105.infinityfree.com');
+define('DB_USER', 'if0_42011396');
+define('DB_PASS', 'Pjzc13804');
+define('DB_NAME', 'if0_42011396_sistema_ventas'); // CAMBIAR al nombre real de tu BD
 define('DB_PORT', 3306);
 define('BASE_URL', '/proyectocesar');
 
 function getDB() {
     static $db = null;
     if ($db === null) {
-        try {
-            $db = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT);
-            if ($db->connect_error) {
-                die("Error de conexion: " . $db->connect_error);
-            }
-            $db->set_charset("utf8mb4");
-        } catch (Exception $e) {
-            die("Error de conexion: " . $e->getMessage());
+        $db = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT);
+        if ($db->connect_error) {
+            die("Error de conexion: " . $db->connect_error);
         }
+        $db->set_charset("utf8mb4");
     }
     return $db;
 }
@@ -56,13 +58,9 @@ function getExchangeRate() {
     curl_close($ch);
     if ($http_code === 200 && $response) {
         $data = json_decode($response, true);
-        if (isset($data['promedio'])) {
-            $rate = floatval($data['promedio']);
-        } elseif (isset($data['promedioReal'])) {
-            $rate = floatval($data['promedioReal']);
-        } elseif (isset($data['precio'])) {
-            $rate = floatval($data['precio']);
-        }
+        if (isset($data['promedio'])) $rate = floatval($data['promedio']);
+        elseif (isset($data['promedioReal'])) $rate = floatval($data['promedioReal']);
+        elseif (isset($data['precio'])) $rate = floatval($data['precio']);
     }
     return $rate > 0 ? $rate : 0;
 }
