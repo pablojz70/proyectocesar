@@ -20,6 +20,9 @@ $payments = $db->query("SELECT * FROM payments WHERE sale_id=$id ORDER BY paymen
         <h4 class="mb-0">Venta #<?= $id ?></h4>
         <div>
             <button class="btn btn-secondary" onclick="printDiv('print-area')"><i class="bi bi-printer"></i></button>
+            <?php if ($sale['sale_type'] === 'credito' && $sale['status'] !== 'pagada'): ?>
+            <a href="../payments/register_payment.php?sale_id=<?= $id ?>&client_id=<?= $sale['client_id'] ?>" class="btn btn-success"><i class="bi bi-cash"></i> Registrar Pago</a>
+            <?php endif; ?>
             <a href="history.php" class="btn btn-primary"><i class="bi bi-arrow-left"></i> Volver</a>
         </div>
     </div>
