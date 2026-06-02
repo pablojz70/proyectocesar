@@ -114,7 +114,7 @@ require_once '../../includes/header.php';
             Cliente: <strong><?= h($client['name']) ?></strong> - <?= h($client['cedula_rif']) ?>
         </div>
         <div class="card-body">
-            <form method="POST">
+            <form method="POST" novalidate>
                 <input type="hidden" name="client_id" value="<?= $client_id ?>">
                 <div class="mb-3">
                     <label class="form-label">Seleccionar Venta</label>
