@@ -13,16 +13,17 @@
         .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; }
         .btn-primary:hover { background: linear-gradient(135deg, #5a6fd6 0%, #6a4192 100%); }
         .logo-icon { font-size: 3rem; }
+        .logo-img { height: 80px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-5">
-                <div class="card">
+                    <div class="card">
                     <div class="card-header">
-                        <div class="logo-icon">💰</div>
-                        <h3 class="mb-0">Sistema de Ventas y Créditos</h3>
+                        <img src="<?= BASE_URL ?>/imagen/cesar.png" class="logo-img" alt="Cesar">
+                        <h3 class="mb-0">Sistema de Ventas y Cr&eacute;ditos</h3>
                         <small>Inicia sesión para continuar</small>
                     </div>
                     <div class="card-body p-4">
