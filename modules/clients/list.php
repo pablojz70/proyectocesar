@@ -60,7 +60,9 @@ $result = $db->query("SELECT * FROM clients WHERE $where ORDER BY name ASC");
                             <td><small class="text-muted"><?= h(substr($row['observations'] ?? '', 0, 50)) ?></small></td>
                             <td>
                                 <a href="edit.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning" title="Editar"><i class="bi bi-pencil"></i></a>
+                                <?php if (isAdmin()): ?>
                                 <a href="delete.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirmDelete('¿Eliminar este cliente?')" title="Eliminar"><i class="bi bi-trash"></i></a>
+                                <?php endif; ?>
                                 <a href="../sales/history.php?client_id=<?= $row['id'] ?>" class="btn btn-sm btn-info" title="Ventas"><i class="bi bi-receipt"></i></a>
                                 <a href="../loans/history.php?client_id=<?= $row['id'] ?>" class="btn btn-sm btn-secondary" title="Préstamos"><i class="bi bi-bank"></i></a>
                             </td>
