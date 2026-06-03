@@ -32,10 +32,10 @@
 <div class="d-flex" id="wrapper">
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header d-none d-md-block">
-            <a href="<?= BASE_URL ?>/dashboard.php"><img src="<?= BASE_URL ?>/imagen/cesar.png" style="height:40px;vertical-align:middle" alt="Cesar"> Ventas y Cr&eacute;ditos</a>
+            <a href="<?= BASE_URL ?>/dashboard.php"><img src="<?= BASE_URL ?>/imagen/cesar.png" style="height:40px;vertical-align:middle" alt="Cesar"> Cesar</a>
         </div>
         <div class="sidebar-header d-md-none">
-            <a href="<?= BASE_URL ?>/dashboard.php">💰 App</a>
+            <a href="<?= BASE_URL ?>/dashboard.php">💰 Cesar</a>
             <button class="btn btn-sm btn-outline-dark float-end" onclick="toggleSidebar()"><i class="bi bi-x-lg"></i></button>
         </div>
         <ul class="nav flex-column sidebar-nav">
