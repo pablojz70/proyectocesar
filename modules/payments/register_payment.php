@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $exchange_rate = floatval($_POST['exchange_rate'] ?? 0);
 
     if ($monto <= 0) {
-        $_SESSION['error'] = 'Debe ingresar un monto v&aacute;lido';
+        $_SESSION['error'] = 'Debe ingresar un monto válido';
         redirect("/modules/payments/register_payment.php?sale_id=$sale_id_pay&client_id=$client_id");
     }
 

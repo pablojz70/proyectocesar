@@ -8,7 +8,7 @@ $is_admin = isAdmin();
 $where = $is_admin ? "1=1" : "user_id = $user_id";
 
 $loan = $db->query("SELECT l.*, c.name as client_name FROM loans l JOIN clients c ON c.id=l.client_id WHERE l.id=$id AND $where")->fetch_assoc();
-if (!$loan) { $_SESSION['error'] = 'Pr&eacute;stamo no encontrado'; redirect('/modules/loans/history.php'); }
+if (!$loan) { $_SESSION['error'] = 'Préstamo no encontrado'; redirect('/modules/loans/history.php'); }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status = $_POST['status'];
@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($status === 'pagado') {
             $db->query("UPDATE loan_installments SET status='pagada', paid_date=CURDATE() WHERE loan_id=$id AND status='pendiente'");
         }
-        $_SESSION['success'] = 'Pr&eacute;stamo #' . $id . ' actualizado';
+        $_SESSION['success'] = 'Préstamo #' . $id . ' actualizado';
         redirect('/modules/loans/history.php');
     } else {
         $_SESSION['error'] = 'Error: ' . $db->error;

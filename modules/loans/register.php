@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $db->commit();
-        $_SESSION['success'] = "Pr&eacute;stamo #$loan_id registrado exitosamente";
+        $_SESSION['success'] = "Préstamo #$loan_id registrado exitosamente";
         redirect('/modules/loans/history.php');
     } catch (Exception $e) {
         $db->rollback();

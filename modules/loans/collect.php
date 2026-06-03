@@ -12,7 +12,7 @@ $client_id = intval($_GET['client_id'] ?? 0);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $loan_id_pay = intval($_POST['loan_id']);
     $loan = $db->query("SELECT * FROM loans WHERE id=$loan_id_pay AND $where")->fetch_assoc();
-    if (!$loan) { $_SESSION['error'] = 'Pr&eacute;stamo no encontrado'; redirect('/modules/loans/history.php'); }
+    if (!$loan) { $_SESSION['error'] = 'Préstamo no encontrado'; redirect('/modules/loans/history.php'); }
 
     $amount_paid = floatval($_POST['amount_paid'] ?? 0);
     $action = $_POST['action'] ?? 'normal';
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $total_cancelar = $capital_restante + $interes_devengado;
 
                 if ($amount_paid < $total_cancelar - 0.01) {
-                    throw new Exception("El monto m&iacute;nimo para cancelar es " . number_format($total_cancelar, 2));
+                    throw new Exception("El monto mínimo para cancelar es " . number_format($total_cancelar, 2));
                 }
 
                 $a_capital = $amount_paid - $interes_devengado;
@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 if ($loan_id > 0) {
     $loan = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif FROM loans l JOIN clients c ON c.id=l.client_id WHERE l.id=$loan_id AND $where")->fetch_assoc();
-    if (!$loan) { $_SESSION['error'] = 'Pr&eacute;stamo no encontrado'; redirect('/modules/loans/history.php'); }
+    if (!$loan) { $_SESSION['error'] = 'Préstamo no encontrado'; redirect('/modules/loans/history.php'); }
     $installments = $db->query("SELECT * FROM loan_installments WHERE loan_id=$loan_id ORDER BY installment_number");
 }
 
