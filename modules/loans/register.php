@@ -163,19 +163,22 @@ function recalcular() {
     document.getElementById('monthly_interest_display').textContent = monthlyInterest.toFixed(2);
     if (tipo === 'mensual') {
         document.getElementById('total_interest_display').textContent = monthlyInterest.toFixed(2);
-        document.getElementById('total_amount_display').textContent = amount.toFixed(2) + ' (capital)';
-        document.getElementById('monthly_payment_display').textContent = monthlyInterest.toFixed(2) + ' (solo inter&eacute;s)';
-    } else {
-        var months = parseInt(document.getElementById('term_months').value) || 1;
-        var totalInterest = monthlyInterest * months;
-        var totalAmount = amount + totalInterest;
-        var monthlyPayment = totalAmount / months;
-        document.getElementById('total_interest_display').textContent = totalInterest.toFixed(2);
-        document.getElementById('total_amount_display').textContent = totalAmount.toFixed(2);
-        document.getElementById('monthly_payment_display').textContent = monthlyPayment.toFixed(2);
+        var sym = document.querySelector('[name=currency]').value === 'EUR' ? '€' : 'Ref';
+        document.getElementById('total_amount_display').textContent = amount.toFixed(2) + ' ' + sym + ' (capital)';
+            var sym = document.querySelector('[name=currency]').value === 'EUR' ? '€' : 'Ref';
+            document.getElementById('monthly_payment_display').textContent = monthlyInterest.toFixed(2) + ' ' + sym + ' (Interes)';
+        } else {
+            var months = parseInt(document.getElementById('term_months').value) || 1;
+            var totalInterest = monthlyInterest * months;
+            var totalAmount = amount + totalInterest;
+            var monthlyPayment = totalAmount / months;
+            document.getElementById('total_interest_display').textContent = totalInterest.toFixed(2);
+            document.getElementById('total_amount_display').textContent = totalAmount.toFixed(2);
+            document.getElementById('monthly_payment_display').textContent = monthlyPayment.toFixed(2);
     }
 }
 document.getElementById('loanForm').addEventListener('input', recalcular);
+document.querySelector('[name=currency]').addEventListener('change', recalcular);
 toggleTipo();
 </script>
 <?php require_once '../../includes/footer.php'; ?>
