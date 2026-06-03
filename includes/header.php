@@ -43,6 +43,11 @@
             <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/clients/list.php" onclick="closeSidebar()"><img src="<?= BASE_URL ?>/imagen/2clientes.png" class="sidebar-icon" alt=""> Clientes</a></li>
             <?php if (isAdmin()): ?>
             <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/products/list.php" onclick="closeSidebar()"><img src="<?= BASE_URL ?>/imagen/3productos.png" class="sidebar-icon" alt=""> Productos</a></li>
+            <?php endif; ?>
+            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/sales/register.php" onclick="closeSidebar()"><img src="<?= BASE_URL ?>/imagen/4vender.png" class="sidebar-icon" alt=""> Vender</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/sales/history.php" onclick="closeSidebar()"><img src="<?= BASE_URL ?>/imagen/5ventas.png" class="sidebar-icon" alt=""> Hist. Ventas</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/payments/consult_debt.php" onclick="closeSidebar()"><img src="<?= BASE_URL ?>/imagen/6cobranza.png" class="sidebar-icon" alt=""> Cobranzas</a></li>
+            <?php if (isAdmin()): ?>
             <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/loans/register.php" onclick="closeSidebar()"><img src="<?= BASE_URL ?>/imagen/7prestamos.png" class="sidebar-icon" alt=""> Pr&eacute;stamos</a></li>
             <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/loans/history.php" onclick="closeSidebar()"><img src="<?= BASE_URL ?>/imagen/8historial.png" class="sidebar-icon" alt=""> Hist. Pr&eacute;stamos</a></li>
             <li class="nav-item dropdown">
@@ -57,9 +62,6 @@
             </li>
             <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/users/list.php" onclick="closeSidebar()"><img src="<?= BASE_URL ?>/imagen/10usuarios.png" class="sidebar-icon" alt=""> Usuarios</a></li>
             <?php endif; ?>
-            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/sales/register.php" onclick="closeSidebar()"><img src="<?= BASE_URL ?>/imagen/4vender.png" class="sidebar-icon" alt=""> Vender</a></li>
-            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/sales/history.php" onclick="closeSidebar()"><img src="<?= BASE_URL ?>/imagen/5ventas.png" class="sidebar-icon" alt=""> Hist. Ventas</a></li>
-            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/payments/consult_debt.php" onclick="closeSidebar()"><img src="<?= BASE_URL ?>/imagen/6cobranza.png" class="sidebar-icon" alt=""> Cobranzas</a></li>
             <li class="nav-item d-none d-md-block"><a class="nav-link text-danger" href="<?= BASE_URL ?>/logout.php" onclick="closeSidebar()"><i class="bi bi-box-arrow-right"></i> Cerrar Sesi&oacute;n</a></li>
             <li class="nav-item d-md-none"><a class="nav-link text-danger" href="<?= BASE_URL ?>/logout.php" onclick="closeSidebar()"><i class="bi bi-box-arrow-right"></i> Cerrar Sesi&oacute;n</a></li>
         </ul>
