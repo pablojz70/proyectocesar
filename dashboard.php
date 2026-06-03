@@ -7,9 +7,9 @@ $db = getDB();
 $user_id = $_SESSION['user_id'];
 $is_admin = isAdmin();
 
-$where = $is_admin ? "1=1" : "s.user_id = $user_id";
-$where_c = $is_admin ? "1=1" : "c.user_id = $user_id";
-$where_p = $is_admin ? "1=1" : "p.user_id = $user_id";
+$where = "1=1";
+$where_c = "1=1";
+$where_p = "1=1";
 
 $total_clients = $db->query("SELECT COUNT(*) as c FROM clients WHERE $where_c")->fetch_assoc()['c'];
 $total_products = $db->query("SELECT COUNT(*) as c FROM products WHERE $where_p")->fetch_assoc()['c'];
