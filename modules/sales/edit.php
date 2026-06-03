@@ -97,7 +97,7 @@ require_once '../../includes/header.php';
     <h4 class="mb-3">Editar Venta #<?= $id ?></h4>
     <div class="card">
         <div class="card-body">
-            <form method="POST" id="saleForm" novalidate>
+            <form method="POST" id="saleForm">
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <label class="form-label">Cliente <span class="text-danger">*</span></label>
@@ -166,7 +166,7 @@ require_once '../../includes/header.php';
                                         <td><span class="price-efectivo" data-value="<?= $item['unit_price_efectivo'] ?>"><?= number_format($item['unit_price_efectivo'],2) ?></span></td>
                                         <td><span class="price-euro" data-value="<?= $item['unit_price_euro'] ?>"><?= number_format($item['unit_price_euro'],2) ?></span></td>
                                         <td><span class="price-bs" data-value="<?= $item['unit_price_bs'] ?>"><?= number_format($item['unit_price_bs'],2) ?></span></td>
-                                        <td><input type="number" name="quantity[]" class="form-control qty" min="1" value="<?= $item['quantity'] ?>"></td>
+                                        <td><input type="number" name="quantity[]" class="form-control qty" min="1" value="<?= $item['quantity'] ?>" data-old-qty="<?= $item['quantity'] ?>"></td>
                                         <td><span class="subtotal-efectivo"><?= number_format($item['quantity']*$item['unit_price_efectivo'],2) ?></span></td>
                                         <td><span class="subtotal-euro"><?= number_format($item['quantity']*$item['unit_price_euro'],2) ?></span></td>
                                         <td><span class="subtotal-bs"><?= number_format($item['quantity']*$item['unit_price_bs'],2) ?></span></td>
@@ -231,7 +231,8 @@ function attachEvents(row) {
             row.querySelector('.price-euro').dataset.value = opt.dataset.priceEuro;
             row.querySelector('.price-bs').textContent = parseFloat(opt.dataset.priceBs).toFixed(2);
             row.querySelector('.price-bs').dataset.value = opt.dataset.priceBs;
-            row.querySelector('input.qty').max = opt.dataset.stock;
+            var oldQty = parseInt(row.querySelector('input.qty').dataset.oldQty) || 0;
+            row.querySelector('input.qty').max = parseInt(opt.dataset.stock) + oldQty;
         } else {
             row.querySelector('.price-efectivo').textContent = '0.00';
             row.querySelector('.price-efectivo').dataset.value = '0';
