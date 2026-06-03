@@ -1,6 +1,6 @@
 <?php
 require_once '../../config/database.php';
-$page_title = 'Consultar Deuda de Cliente';
+$page_title = 'Consultar Deuda de Cliente por productos Adquiridos';
 require_once '../../includes/header.php';
 
 $db = getDB();
@@ -29,7 +29,7 @@ if ($client_id > 0) {
 }
 ?>
 <div class="container-fluid">
-    <h4 class="mb-3">Consultar Deuda de Cliente</h4>
+    <h4 class="mb-3">Consultar Deuda de Cliente por productos Adquiridos</h4>
     <div class="card mb-3">
         <div class="card-body">
             <form method="GET" class="row g-2">
