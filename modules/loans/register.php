@@ -101,7 +101,7 @@ require_once '../../includes/header.php';
                 <div class="row mb-3">
                     <div class="col-md-3">
                         <label class="form-label">Inter&eacute;s Mensual (%) <span class="text-danger">*</span></label>
-                        <input type="number" name="interest_rate" id="interest_rate" class="form-control" step="0.01" min="0" value="5" required>
+                        <input type="number" name="interest_rate" id="interest_rate" class="form-control" step="1" min="0" value="5" required>
                     </div>
                     <div class="col-md-3" id="plazo_div">
                         <label class="form-label">Plazo (meses) <span class="text-danger">*</span></label>

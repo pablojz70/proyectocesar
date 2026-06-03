@@ -76,7 +76,7 @@ require_once '../../includes/header.php';
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Interés Mensual (%) <span class="text-danger">*</span></label>
-                        <input type="number" name="interest_rate" class="form-control" step="0.01" min="0" value="<?= $loan['interest_rate'] ?>" required>
+                        <input type="number" name="interest_rate" class="form-control" step="1" min="0" value="<?= intval($loan[.interest_rate.]) ?>" required>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Moneda <span class="text-danger">*</span></label>
