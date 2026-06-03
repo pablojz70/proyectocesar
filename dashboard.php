@@ -23,6 +23,7 @@ $active_loans = $db->query("SELECT COUNT(*) as c FROM loans WHERE $where AND sta
         <small class="text-muted">Bienvenido, <?= h($_SESSION['full_name']) ?></small>
     </div>
     <div class="row mb-4">
+        <?php if ($is_admin): ?>
         <div class="col-md-3 mb-3">
             <div class="stat-card bg-gradient-primary">
                 <h3><?= $total_clients ?></h3>
@@ -47,13 +48,102 @@ $active_loans = $db->query("SELECT COUNT(*) as c FROM loans WHERE $where AND sta
                 <small>Ventas en Efectivo $</small>
             </div>
         </div>
+        <?php else: ?>
+        <div class="col-md-4 mb-3">
+            <div class="stat-card bg-gradient-primary">
+                <h3><?= $total_clients ?></h3>
+                <small>Clientes Registrados</small>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="stat-card bg-gradient-success">
+                <h3><?= $total_products ?></h3>
+                <small>Productos</small>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card p-3">
+                <h6>Tasa BCV Hoy</h6>
+                <h3 id="tasa-display" class="text-primary">Cargando...</h3>
+                <button class="btn btn-sm btn-outline-primary" onclick="actualizarTasa()">Actualizar</button>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
+    <?php if ($is_admin): ?>
     <div class="row mb-4">
         <div class="col-md-4 mb-3">
             <div class="stat-card bg-gradient-danger">
                 <h3><?= $pending_sales ?></h3>
                 <small>Ventas a Crédito Pendientes</small>
             </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="stat-card bg-gradient-info">
+                <h3><?= $active_loans ?></h3>
+                <small>Préstamos Activos</small>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card p-3">
+                <h6>Tasa BCV Hoy</h6>
+                <h3 id="tasa-display" class="text-primary">Cargando...</h3>
+                <button class="btn btn-sm btn-outline-primary" onclick="actualizarTasa()">Actualizar</button>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+    <?php if ($is_admin): ?>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header">Últimas Ventas</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>Cliente</th><th>Total USDT</th><th>Tipo</th><th>Estado</th><th>Fecha</th></tr></thead>
+                            <tbody>
+                                <?php $recent = $db->query("SELECT s.*, c.name as client_name FROM sales s JOIN clients c ON c.id=s.client_id WHERE $where ORDER BY s.id DESC LIMIT 5"); ?>
+                                <?php while($r = $recent->fetch_assoc()): ?>
+                                <tr>
+                                    <td><?= h($r['client_name']) ?></td>
+                                    <td>$<?= number_format($r['total_efectivo'],2) ?></td>
+                                    <td><span class="badge bg-<?= $r['sale_type']=='contado'?'success':'warning' ?>"><?= $r['sale_type'] ?></span></td>
+                                    <td><span class="badge bg-<?= $r['status']=='pagada'?'success':($r['status']=='pendiente'?'danger':'info') ?>"><?= $r['status'] ?></span></td>
+                                    <td><?= date('d/m/Y', strtotime($r['created_at'])) ?></td>
+                                </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header">Préstamos Activos</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>Cliente</th><th>Monto</th><th>Cuota</th><th>Estado</th></tr></thead>
+                            <tbody>
+                                <?php $loans = $db->query("SELECT l.*, c.name as client_name FROM loans l JOIN clients c ON c.id=l.client_id WHERE $where AND l.status='activo' ORDER BY l.id DESC LIMIT 5"); ?>
+                                <?php while($l = $loans->fetch_assoc()): ?>
+                                <tr>
+                                    <td><?= h($l['client_name']) ?></td>
+                                    <td><?= number_format($l['amount'],2) ?> <?= $l['currency'] ?></td>
+                                    <td><?= number_format($l['monthly_payment'],2) ?> <?= $l['currency'] ?></td>
+                                    <td><span class="badge bg-warning">Activo</span></td>
+                                </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
         </div>
         <div class="col-md-4 mb-3">
             <div class="stat-card bg-gradient-info">
