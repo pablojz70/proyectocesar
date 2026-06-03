@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $db->begin_transaction();
     try {
         $stmt = $db->prepare("UPDATE loans SET amount=?, interest_rate=?, term_months=?, loan_type=?, currency=?, total_interest=?, total_amount=?, monthly_payment=?, status=? WHERE id=? AND $where");
-        $stmt->bind_param("ddissddd si", $amount, $interest_rate, $term_months, $loan_type, $currency, $total_interest, $total_amount, $monthly_payment, $status, $id);
+        $stmt->bind_param("ddissddddsi", $amount, $interest_rate, $term_months, $loan_type, $currency, $total_interest, $total_amount, $monthly_payment, $status, $id);
         $stmt->execute();
 
         // Regenerar cuotas
@@ -76,7 +76,7 @@ require_once '../../includes/header.php';
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Interés Mensual (%) <span class="text-danger">*</span></label>
-                        <input type="number" name="interest_rate" class="form-control" step="1" min="0" value="<?= intval($loan[.interest_rate.]) ?>" required>
+                        <input type="number" name="interest_rate" class="form-control" step="1" min="0" value="<?= $loan['interest_rate'] ?>" required>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Moneda <span class="text-danger">*</span></label>
