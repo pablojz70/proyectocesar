@@ -126,7 +126,9 @@ $sales = $db->query("SELECT s.*, c.name as client_name,
                             <td class="no-print">
                                 <a href="detail.php?id=<?= $s['id'] ?>" class="btn btn-sm btn-info" title="Ver detalle"><i class="bi bi-eye"></i></a>
                                 <a href="edit.php?id=<?= $s['id'] ?>" class="btn btn-sm btn-warning" title="Editar"><i class="bi bi-pencil"></i></a>
+                                <?php if (isAdmin()): ?>
                                 <a href="delete.php?id=<?= $s['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirmDelete('Eliminar venta #<?= $s['id'] ?>? Se restaurar\u00e1 el stock.')" title="Eliminar"><i class="bi bi-trash"></i></a>
+                                <?php endif; ?>
                             </td>
                         </tr>
                         <?php endwhile; ?>
