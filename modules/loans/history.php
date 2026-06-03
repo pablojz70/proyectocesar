@@ -107,6 +107,8 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif FROM loans 
                             <td><?= date('d/m/Y', strtotime($l['start_date'])) ?></td>
                             <td class="no-print">
                                 <a href="collect.php?loan_id=<?= $l['id'] ?>" class="btn btn-sm btn-success" title="Cobrar"><i class="bi bi-cash"></i></a>
+                                <a href="edit.php?id=<?= $l['id'] ?>" class="btn btn-sm btn-warning" title="Editar"><i class="bi bi-pencil"></i></a>
+                                <a href="delete.php?id=<?= $l['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirmDelete('¿Eliminar pr&eacute;stamo #<?= $l['id'] ?>?')" title="Eliminar"><i class="bi bi-trash"></i></a>
                             </td>
                         </tr>
                         <?php endwhile; ?>
