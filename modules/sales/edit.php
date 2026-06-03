@@ -71,13 +71,13 @@ require_once '../../includes/header.php';
                             <option value="parcial" <?= $sale['status']=='parcial'?'selected':'' ?>>Parcial</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-2" id="cuotas_div" style="display:<?= $sale['sale_type']=='credito'?'block':'none' ?>">
                         <label class="form-label">N° Cuotas</label>
                         <input type="number" name="installments" class="form-control" value="<?= $sale['installments'] ?>" min="1">
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-md-3">
+                    <div class="col-md-3" id="tasa_div" style="display:<?= $sale['payment_currency']=='BCV'?'block':'none' ?>">
                         <label class="form-label">Tasa de Cambio</label>
                         <input type="number" name="exchange_rate" class="form-control" step="0.01" value="<?= $sale['exchange_rate'] ?>">
                     </div>
@@ -108,4 +108,12 @@ require_once '../../includes/header.php';
         </div>
     </div>
 </div>
+<script>
+document.querySelector('[name=sale_type]').addEventListener('change', function() {
+    document.getElementById('cuotas_div').style.display = this.value === 'credito' ? 'block' : 'none';
+});
+document.querySelector('[name=payment_currency]').addEventListener('change', function() {
+    document.getElementById('tasa_div').style.display = this.value === 'BCV' ? 'block' : 'none';
+});
+</script>
 <?php require_once '../../includes/footer.php'; ?>
