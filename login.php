@@ -58,7 +58,8 @@
                             <button type="submit" class="btn btn-primary btn-lg w-100">Ingresar</button>
                         </form>
                         <div class="text-center mt-3">
-                            <small class="text-muted">Elaborado por Pablo Zambrano. Versi&oacute;n 1</small>
+                            <small class="text-muted">Elaborado por Pablo Zambrano</small><br>
+                            <small class="text-muted">Versi&oacute;n 1</small>
                         </div>
                     </div>
                 </div>
