@@ -32,7 +32,7 @@
 <div class="d-flex" id="wrapper">
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header d-none d-md-block">
-            <a href="<?= BASE_URL ?>/dashboard.php">💰 Ventas y Cr&eacute;ditos</a>
+            <a href="<?= BASE_URL ?>/dashboard.php"><img src="<?= BASE_URL ?>/imagen/cesar.png" style="height:30px;vertical-align:middle" alt="Cesar"> Ventas y Cr&eacute;ditos</a>
         </div>
         <div class="sidebar-header d-md-none">
             <a href="<?= BASE_URL ?>/dashboard.php">💰 App</a>
@@ -60,6 +60,7 @@
             <?php if (isAdmin()): ?>
             <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/users/list.php" onclick="closeSidebar()"><img src="<?= BASE_URL ?>/imagen/10usuarios.png" class="sidebar-icon" alt=""> Usuarios</a></li>
             <?php endif; ?>
+            <li class="nav-item d-none d-md-block"><a class="nav-link text-danger" href="<?= BASE_URL ?>/logout.php" onclick="closeSidebar()"><i class="bi bi-box-arrow-right"></i> Cerrar Sesi&oacute;n</a></li>
             <li class="nav-item d-md-none"><a class="nav-link text-danger" href="<?= BASE_URL ?>/logout.php" onclick="closeSidebar()"><i class="bi bi-box-arrow-right"></i> Cerrar Sesi&oacute;n</a></li>
         </ul>
     </div>
