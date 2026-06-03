@@ -13,7 +13,7 @@
         .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; }
         .btn-primary:hover { background: linear-gradient(135deg, #5a6fd6 0%, #6a4192 100%); }
         .logo-icon { font-size: 3rem; }
-        .logo-img { height: 80px; margin-bottom: 10px; }
+        .logo-img { height: 120px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -23,7 +23,7 @@
                     <div class="card">
                     <div class="card-header">
                         <img src="<?= BASE_URL ?>/imagen/cesar.png" class="logo-img" alt="Cesar">
-                        <h3 class="mb-0">Sistema de Ventas y Cr&eacute;ditos</h3>
+                        <h3 class="mb-0">Sistema</h3>
                         <small>Inicia sesión para continuar</small>
                     </div>
                     <div class="card-body p-4">
@@ -58,7 +58,7 @@
                             <button type="submit" class="btn btn-primary btn-lg w-100">Ingresar</button>
                         </form>
                         <div class="text-center mt-3">
-                            <small class="text-muted">Usuarios por defecto: admin / vendedor1 - Contraseña: password</small>
+                            <small class="text-muted">Elaborado por Pablo Zambrano. Versi&oacute;n 1</small>
                         </div>
                     </div>
                 </div>
