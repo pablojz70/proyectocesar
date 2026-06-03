@@ -87,8 +87,8 @@ $pending_sales = $db->query("SELECT COUNT(*) as c FROM sales WHERE $where AND sa
     </div>
     <?php endif; ?>
     <?php if ($is_admin): ?>
-    <div class="row">
-        <div class="col-md-6 mb-3">
+    <div class="row mb-3">
+        <div class="col-12">
             <div class="card">
                 <div class="card-header">Últimas Ventas</div>
                 <div class="card-body p-0">
@@ -108,7 +108,36 @@ $pending_sales = $db->query("SELECT COUNT(*) as c FROM sales WHERE $where AND sa
                                 <?php endwhile; ?>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">Últimos Pr&eacute;stamos</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>Cliente</th><th>Monto</th><th>Tipo</th><th>Estado</th></tr></thead>
+                            <tbody>
+                                <?php $loans = $db->query("SELECT l.*, c.name as client_name FROM loans l JOIN clients c ON c.id=l.client_id WHERE $where ORDER BY l.id DESC LIMIT 5"); ?>
+                                <?php while($l = $loans->fetch_assoc()): ?>
+                                <tr>
+                                    <td><?= h($l['client_name']) ?></td>
+                                    <td><?= number_format($l['amount'],2) ?> <?= $l['currency'] ?></td>
+                                    <td><span class="badge bg-secondary"><?= $l['loan_type'] ?></span></td>
+                                    <td><span class="badge bg-<?= $l['status']=='activo'?'warning':($l['status']=='pagado'?'success':'danger') ?>"><?= $l['status'] ?></span></td>
+                                </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
         <div class="col-md-6 mb-3">
             <div class="card">
                 <div class="card-header">Últimos Pr&eacute;stamos</div>
