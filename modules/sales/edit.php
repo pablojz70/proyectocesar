@@ -145,32 +145,23 @@ require_once '../../includes/header.php';
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Producto</th><th>Efectivo $</th><th>EURO €</th><th>Ref</th><th>Cantidad</th><th>Subtotal $</th><th>Subtotal €</th><th>Total Ref</th><th></th>
-                                    </tr>
-                                </thead>
+                        <thead>
+                            <tr>
+                                <th>Producto</th><th>Efectivo $</th><th>EURO €</th><th>Ref</th><th>Cantidad</th><th>Subtotal $</th><th>Subtotal €</th><th>Total Ref</th><th></th>
+                            </tr>
+                        </thead>
                                 <tbody id="products-body">
                                     <?php $idx = 0; mysqli_data_seek($items_list, 0); while($item = $items_list->fetch_assoc()): ?>
-                                    <tr class="sale-row">
-                                        <td>
-                                            <select name="product_id[]" class="form-select product-select">
-                                                <option value="">Seleccionar...</option>
-                                                <?php mysqli_data_seek($products, 0); while($p = $products->fetch_assoc()): ?>
-                                                <option value="<?= $p['id'] ?>" <?= $p['id']==$item['product_id']?'selected':'' ?> data-price-efectivo="<?= $p['price_efectivo'] ?>" data-price-euro="<?= $p['price_euro'] ?>" data-price-bs="<?= $p['price_bcv'] ?>" data-stock="<?= $p['stock'] ?>">
-                                                    <?= h($p['name']) ?> (Stock: <?= $p['stock'] ?>)
-                                                </option>
-                                                <?php endwhile; ?>
-                                            </select>
-                                        </td>
+                                    <tr class="sale-row existing-item">
+                                        <td><?= h($item['product_name']) ?><input type="hidden" name="product_id[]" value="<?= $item['product_id'] ?>"></td>
                                         <td><span class="price-efectivo" data-value="<?= $item['unit_price_efectivo'] ?>"><?= number_format($item['unit_price_efectivo'],2) ?></span></td>
                                         <td><span class="price-euro" data-value="<?= $item['unit_price_euro'] ?>"><?= number_format($item['unit_price_euro'],2) ?></span></td>
                                         <td><span class="price-bs" data-value="<?= $item['unit_price_bs'] ?>"><?= number_format($item['unit_price_bs'],2) ?></span></td>
-                                        <td><input type="number" name="quantity[]" class="form-control qty" min="1" value="<?= $item['quantity'] ?>" data-old-qty="<?= $item['quantity'] ?>"></td>
+                                        <td><input type="number" name="quantity[]" class="form-control qty" min="1" value="<?= $item['quantity'] ?>" data-old-qty="<?= $item['quantity'] ?>" readonly style="background:#eee"></td>
                                         <td><span class="subtotal-efectivo"><?= number_format($item['quantity']*$item['unit_price_efectivo'],2) ?></span></td>
                                         <td><span class="subtotal-euro"><?= number_format($item['quantity']*$item['unit_price_euro'],2) ?></span></td>
                                         <td><span class="subtotal-bs"><?= number_format($item['quantity']*$item['unit_price_bs'],2) ?></span></td>
-                                        <td><button type="button" class="btn btn-sm btn-danger" onclick="removeProductRow(this)"><i class="bi bi-x"></i></button></td>
+                                        <td><button type="button" class="btn btn-sm btn-danger" onclick="removeProductRow(this)"><i class="bi bi-trash"></i></button></td>
                                     </tr>
                                     <?php $idx++; endwhile; ?>
                                 </tbody>
