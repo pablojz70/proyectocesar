@@ -4,7 +4,7 @@ require_once '../../config/database.php';
 $db = getDB();
 $user_id = $_SESSION['user_id'];
 $is_admin = isAdmin();
-$where = $is_admin ? "1=1" : "user_id = $user_id";
+$where = "1=1";
 
 $products = $db->query("SELECT * FROM products WHERE $where AND stock > 0 ORDER BY name ASC");
 

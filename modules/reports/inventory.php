@@ -6,7 +6,7 @@ require_once '../../includes/header.php';
 $db = getDB();
 $user_id = $_SESSION['user_id'];
 $is_admin = isAdmin();
-$where = $is_admin ? "1=1" : "user_id = $user_id";
+$where = "1=1";
 
 $products = $db->query("SELECT * FROM products WHERE $where ORDER BY stock ASC");
 $total_productos = $db->query("SELECT COUNT(*) as c, SUM(stock) as s FROM products WHERE $where")->fetch_assoc();

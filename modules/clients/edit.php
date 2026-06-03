@@ -7,7 +7,7 @@ $db = getDB();
 $id = intval($_GET['id'] ?? 0);
 $user_id = $_SESSION['user_id'];
 $is_admin = isAdmin();
-$where = $is_admin ? "1=1" : "user_id = $user_id";
+$where = "1=1";
 
 $client = $db->query("SELECT * FROM clients WHERE id = $id AND $where")->fetch_assoc();
 if (!$client) { $_SESSION['error'] = 'Cliente no encontrado'; redirect('/modules/clients/list.php'); }

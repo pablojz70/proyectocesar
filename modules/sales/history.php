@@ -13,7 +13,7 @@ $client_id = intval($_GET['client_id'] ?? 0);
 $tipo = $_GET['tipo'] ?? '';
 $estado = $_GET['estado'] ?? '';
 
-$where = $is_admin ? "1=1" : "s.user_id = $user_id";
+$where = "1=1";
 $where .= " AND DATE(s.created_at) BETWEEN '$fecha_desde' AND '$fecha_hasta'";
 if ($client_id > 0) $where .= " AND s.client_id = $client_id";
 if ($tipo) $where .= " AND s.sale_type = '$tipo'";

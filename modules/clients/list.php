@@ -8,7 +8,7 @@ $user_id = $_SESSION['user_id'];
 $search = $_GET['search'] ?? '';
 $is_admin = isAdmin();
 
-$where = $is_admin ? "1=1" : "user_id = $user_id";
+$where = "1=1";
 if ($search) {
     $s = $db->real_escape_string($search);
     $where .= " AND (name LIKE '%$s%' OR cedula_rif LIKE '%$s%')";

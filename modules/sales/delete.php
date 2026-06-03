@@ -4,7 +4,7 @@ $db = getDB();
 $id = intval($_GET['id'] ?? 0);
 $user_id = $_SESSION['user_id'];
 $is_admin = isAdmin();
-$where = $is_admin ? "1=1" : "s.user_id = $user_id";
+$where = "1=1";
 
 $sale = $db->query("SELECT * FROM sales s WHERE s.id=$id AND $where")->fetch_assoc();
 if (!$sale) { $_SESSION['error'] = 'Venta no encontrada'; redirect('/modules/sales/history.php'); }

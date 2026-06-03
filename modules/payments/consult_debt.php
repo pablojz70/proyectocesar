@@ -10,7 +10,7 @@ $is_admin = isAdmin();
 $search = $_GET['search'] ?? '';
 $client_id = intval($_GET['client_id'] ?? 0);
 
-$where_clients = $is_admin ? "1=1" : "user_id = $user_id";
+$where_clients = "1=1";
 
 if ($client_id > 0) {
     $deudas = $db->query("

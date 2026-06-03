@@ -6,7 +6,7 @@ require_once '../../includes/header.php';
 $db = getDB();
 $user_id = $_SESSION['user_id'];
 $is_admin = isAdmin();
-$where = $is_admin ? "1=1" : "l.user_id = $user_id";
+$where = "1=1";
 
 $search_client = intval($_GET['client_id'] ?? 0);
 $estado = $_GET['estado'] ?? '';

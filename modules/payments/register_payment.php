@@ -4,7 +4,7 @@ require_once '../../config/database.php';
 $db = getDB();
 $user_id = $_SESSION['user_id'];
 $is_admin = isAdmin();
-$where_sales = $is_admin ? "1=1" : "s.user_id = $user_id";
+$where_sales = "1=1";
 
 $sale_id = intval($_GET['sale_id'] ?? 0);
 $client_id = intval($_GET['client_id'] ?? 0);

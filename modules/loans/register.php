@@ -4,7 +4,7 @@ require_once '../../config/database.php';
 $db = getDB();
 $user_id = $_SESSION['user_id'];
 $is_admin = isAdmin();
-$where = $is_admin ? "1=1" : "user_id = $user_id";
+$where = "1=1";
 $clients = $db->query("SELECT * FROM clients WHERE $where ORDER BY name ASC");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

@@ -5,7 +5,7 @@ $db = getDB();
 $id = intval($_GET['id'] ?? 0);
 $user_id = $_SESSION['user_id'];
 $is_admin = isAdmin();
-$where = $is_admin ? "1=1" : "user_id = $user_id";
+$where = "1=1";
 
 $product = $db->query("SELECT * FROM products WHERE id = $id AND $where")->fetch_assoc();
 if (!$product) { $_SESSION['error'] = 'Producto no encontrado'; redirect('/modules/products/list.php'); }

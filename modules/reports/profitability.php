@@ -6,8 +6,8 @@ require_once '../../includes/header.php';
 $db = getDB();
 $user_id = $_SESSION['user_id'];
 $is_admin = isAdmin();
-$where = $is_admin ? "1=1" : "p.user_id = $user_id";
-$where_s = $is_admin ? "1=1" : "s.user_id = $user_id";
+$where = "1=1";
+$where_s = "1=1";
 
 $mas_vendidos = $db->query("
     SELECT p.name, p.type, SUM(si.quantity) as total_qty, SUM(si.quantity * si.unit_price_efectivo) as total_revenue

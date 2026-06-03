@@ -7,7 +7,7 @@ $db = getDB();
 $id = intval($_GET['id'] ?? 0);
 $user_id = $_SESSION['user_id'];
 $is_admin = isAdmin();
-$where = $is_admin ? "1=1" : "s.user_id = $user_id";
+$where = "1=1";
 
 $sale = $db->query("SELECT s.*, c.name as client_name, c.cedula_rif, c.phone FROM sales s JOIN clients c ON c.id=s.client_id WHERE s.id=$id AND $where")->fetch_assoc();
 if (!$sale) { $_SESSION['error'] = 'Venta no encontrada'; redirect('/modules/sales/history.php'); }
