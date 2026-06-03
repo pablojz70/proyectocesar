@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $db->begin_transaction();
     try {
         $stmt = $db->prepare("UPDATE loans SET amount=?, interest_rate=?, term_months=?, loan_type=?, currency=?, total_interest=?, total_amount=?, monthly_payment=?, status=? WHERE id=? AND $where");
-        $stmt->bind_param("ddissddddsi", $amount, $interest_rate, $term_months, $loan_type, $currency, $total_interest, $total_amount, $monthly_payment, $status, $id);
+        $stmt->bind_param("ddissdddsi", $amount, $interest_rate, $term_months, $loan_type, $currency, $total_interest, $total_amount, $monthly_payment, $status, $id);
         $stmt->execute();
 
         // Regenerar cuotas
