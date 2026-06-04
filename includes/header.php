@@ -61,6 +61,7 @@
                 </ul>
             </li>
             <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/users/list.php" onclick="closeSidebar()"><img src="<?= BASE_URL ?>/imagen/10usuarios.png" class="sidebar-icon" alt=""> Usuarios</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?= BASE_URL ?>/modules/backup/index.php" onclick="closeSidebar()"><i class="bi bi-cloud-download"></i> Respaldo</a></li>
             <?php endif; ?>
             <li class="nav-item d-none d-md-block"><a class="nav-link text-danger" href="<?= BASE_URL ?>/logout.php" onclick="closeSidebar()"><i class="bi bi-box-arrow-right"></i> Cerrar Sesi&oacute;n</a></li>
             <li class="nav-item d-md-none"><a class="nav-link text-danger" href="<?= BASE_URL ?>/logout.php" onclick="closeSidebar()"><i class="bi bi-box-arrow-right"></i> Cerrar Sesi&oacute;n</a></li>
