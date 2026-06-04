@@ -83,6 +83,7 @@ require_once '../../includes/header.php';
                         <label class="form-label">Moneda <span class="text-danger">*</span></label>
                         <select name="currency" class="form-select" required>
                             <option value="EUR">Euros (EUR)</option>
+                            <option value="USDT">D&oacute;lar USDT</option>
                             <option value="BS">Bol&iacute;vares (Bs)</option>
                         </select>
                     </div>
@@ -165,7 +166,7 @@ function recalcular() {
         document.getElementById('total_interest_display').textContent = monthlyInterest.toFixed(2);
         var sym = document.querySelector('[name=currency]').value === 'EUR' ? '€' : 'Ref';
         document.getElementById('total_amount_display').textContent = amount.toFixed(2) + ' ' + sym + ' (capital)';
-            var sym = document.querySelector('[name=currency]').value === 'EUR' ? '€' : 'Ref';
+        var sym = document.querySelector('[name=currency]').value === 'EUR' ? '€' : (document.querySelector('[name=currency]').value === 'USDT' ? '$' : 'Ref');
             document.getElementById('monthly_payment_display').textContent = monthlyInterest.toFixed(2) + ' ' + sym + ' (Interes)';
         } else {
             var months = parseInt(document.getElementById('term_months').value) || 1;
