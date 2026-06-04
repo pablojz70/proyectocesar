@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../../config/database.php';
 if (!isAdmin()) { $_SESSION['error'] = 'Acceso denegado'; redirect('/dashboard.php'); }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_FILES['sql_file'])) {
