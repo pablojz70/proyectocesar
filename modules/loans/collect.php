@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $amount_paid = floatval($_POST['amount_paid'] ?? 0);
     $action = $_POST['action'] ?? 'normal';
-    $hoy = date('Y-m-d');
+    $fecha_pago = $_POST['fecha_pago'] ?? date('Y-m-d');
 
     $db->begin_transaction();
     try {
@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $nuevo_capital = $capital_restante - $a_capital;
 
                 $db->query("UPDATE loans SET status='pagado', total_amount = total_amount - $a_capital WHERE id=$loan_id_pay");
-                $db->query("UPDATE loan_installments SET status='pagada', paid_date='$hoy' WHERE loan_id=$loan_id_pay AND status='pendiente'");
+                $db->query("UPDATE loan_installments SET status='pagada', paid_date='$fecha_pago' WHERE loan_id=$loan_id_pay AND status='pendiente'");
             } else {
                 $interes_vencido = $loan['monthly_payment'] - ($loan['total_amount'] - $loan['amount']);
                 $a_capital = max(0, $amount_paid - $loan['monthly_payment']);
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $db->query("UPDATE loans SET total_amount = total_amount - $a_capital WHERE id=$loan_id_pay");
                 }
 
-                $db->query("UPDATE loan_installments SET status='pagada', paid_date='$hoy' WHERE loan_id=$loan_id_pay AND status='pendiente' LIMIT 1");
+                $db->query("UPDATE loan_installments SET status='pagada', paid_date='$fecha_pago' WHERE loan_id=$loan_id_pay AND status='pendiente' LIMIT 1");
 
                 $nuevo_capital = $loan['total_amount'] - $cap_pagado - $a_capital;
                 if ($nuevo_capital <= 0) {
@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($amount_paid < $total_due) throw new Exception("Monto insuficiente");
             foreach ($installment_ids as $iid) {
                 $iid = intval($iid);
-                $db->query("UPDATE loan_installments SET status='pagada', paid_date='$hoy' WHERE id=$iid");
+                $db->query("UPDATE loan_installments SET status='pagada', paid_date='$fecha_pago' WHERE id=$iid");
             }
             $pending = $db->query("SELECT COUNT(*) as c FROM loan_installments WHERE loan_id=$loan_id_pay AND status='pendiente'")->fetch_assoc()['c'];
             if ($pending == 0) $db->query("UPDATE loans SET status='pagado' WHERE id=$loan_id_pay");
@@ -185,12 +185,16 @@ require_once '../../includes/header.php';
                 </div>
 
                 <div class="row mb-3">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Monto a Pagar</label>
                         <input type="number" name="amount_paid" id="amount_paid" class="form-control" step="0.01" min="0" value="<?= $total_pendiente ?>" required>
                         <small class="text-muted">Inter&eacute;s: <span id="interes_display"><?= number_format($loan['monthly_payment'],2) ?></span> | A capital: <span id="a_capital_display">0.00</span></small>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <label class="form-label">Fecha de Pago</label>
+                        <input type="date" name="fecha_pago" class="form-control" value="<?= date('Y-m-d') ?>">
+                    </div>
+                    <div class="col-md-2">
                         <label class="form-label">Moneda</label>
                         <select name="currency" class="form-select">
                             <option value="<?= $loan['currency'] ?>"><?= $loan['currency'] ?></option>
