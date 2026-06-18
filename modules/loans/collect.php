@@ -40,19 +40,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $interes = $interes_devengado;
                 $nuevo_capital = $capital_restante - $a_capital;
 
-                $stmt = $db->prepare("INSERT INTO payments (sale_id, amount_efectivo, amount_euro, amount_bs, exchange_rate, payment_date) VALUES (?, ?, ?, ?, ?, NOW())");
-                $stmt->bind_param("idddd", 0, $amount_paid, 0, 0, 0);
-                $stmt->execute();
-
                 $db->query("UPDATE loans SET status='pagado', total_amount = total_amount - $a_capital WHERE id=$loan_id_pay");
                 $db->query("UPDATE loan_installments SET status='pagada', paid_date='$hoy' WHERE loan_id=$loan_id_pay AND status='pendiente'");
             } else {
                 $interes_vencido = $loan['monthly_payment'] - ($loan['total_amount'] - $loan['amount']);
                 $a_capital = max(0, $amount_paid - $loan['monthly_payment']);
-
-                $stmt = $db->prepare("INSERT INTO payments (sale_id, amount_efectivo, amount_euro, amount_bs, exchange_rate, payment_date) VALUES (?, ?, ?, ?, ?, NOW())");
-                $stmt->bind_param("idddd", 0, $amount_paid, 0, 0, 0);
-                $stmt->execute();
 
                 if ($a_capital > 0) {
                     $db->query("UPDATE loans SET total_amount = total_amount - $a_capital WHERE id=$loan_id_pay");
