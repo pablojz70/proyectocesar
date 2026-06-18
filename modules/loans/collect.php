@@ -12,10 +12,11 @@ $client_id = intval($_GET['client_id'] ?? 0);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $loan_id_pay = intval($_POST['loan_id']);
     $loan = $db->query("SELECT * FROM loans WHERE id=$loan_id_pay AND $where")->fetch_assoc();
-    if (!$loan) { $_SESSION['error'] = 'Préstamo no encontrado'; redirect('/modules/loans/history.php'); }
+    if (!$loan) { $_SESSION['error'] = 'Pr&eacute;stamo no encontrado'; redirect('/modules/loans/history.php'); }
 
     $amount_paid = floatval($_POST['amount_paid'] ?? 0);
     $action = $_POST['action'] ?? 'normal';
+    $hoy = date('Y-m-d');
 
     $db->begin_transaction();
     try {
@@ -44,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute();
 
                 $db->query("UPDATE loans SET status='pagado', total_amount = total_amount - $a_capital WHERE id=$loan_id_pay");
-                $db->query("UPDATE loan_installments SET status='pagada', paid_date=CURDATE() WHERE loan_id=$loan_id_pay AND status='pendiente'");
+                $db->query("UPDATE loan_installments SET status='pagada', paid_date='$hoy' WHERE loan_id=$loan_id_pay AND status='pendiente'");
             } else {
                 $interes_vencido = $loan['monthly_payment'] - ($loan['total_amount'] - $loan['amount']);
                 $a_capital = max(0, $amount_paid - $loan['monthly_payment']);
@@ -57,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $db->query("UPDATE loans SET total_amount = total_amount - $a_capital WHERE id=$loan_id_pay");
                 }
 
-                $db->query("UPDATE loan_installments SET status='pagada', paid_date=CURDATE() WHERE loan_id=$loan_id_pay AND status='pendiente' LIMIT 1");
+                $db->query("UPDATE loan_installments SET status='pagada', paid_date='$hoy' WHERE loan_id=$loan_id_pay AND status='pendiente' LIMIT 1");
 
                 $nuevo_capital = $loan['total_amount'] - $cap_pagado - $a_capital;
                 if ($nuevo_capital <= 0) {
@@ -83,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($amount_paid < $total_due) throw new Exception("Monto insuficiente");
             foreach ($installment_ids as $iid) {
                 $iid = intval($iid);
-                $db->query("UPDATE loan_installments SET status='pagada', paid_date=CURDATE() WHERE id=$iid");
+                $db->query("UPDATE loan_installments SET status='pagada', paid_date='$hoy' WHERE id=$iid");
             }
             $pending = $db->query("SELECT COUNT(*) as c FROM loan_installments WHERE loan_id=$loan_id_pay AND status='pendiente'")->fetch_assoc()['c'];
             if ($pending == 0) $db->query("UPDATE loans SET status='pagado' WHERE id=$loan_id_pay");
