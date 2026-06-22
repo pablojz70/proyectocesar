@@ -79,9 +79,9 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif FROM loans 
                             <th>Inter&eacute;s</th>
                             <th>Inicio</th>
                             <th>Mora</th>
-                            <th>Total</th>
-                            <th>Cuota</th>
                             <th>Plazo</th>
+                            <th>Cuota</th>
+                            <th>Total</th>
                             <th>Estado</th>
                             <th class="no-print">Acciones</th>
                         </tr>
@@ -107,9 +107,9 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif FROM loans 
                             <td><?= number_format($l['total_interest'],2) ?> (<?= $l['interest_rate'] ?>%)</td>
                             <td><?= date('d/m/Y', strtotime($l['start_date'])) ?></td>
                             <td><?= $l['status'] === 'pagado' ? '-' : $mora ?> <?= $mora == 1 ? 'mes' : 'meses' ?></td>
-                            <td><strong><?= number_format($l['total_amount'],2) ?></strong></td>
-                            <td><?= number_format($l['monthly_payment'],2) ?></td>
                             <td><?= $l['term_months'] ?> <?= $l['loan_type']=='mensual'?'(mensual)':'' ?></td>
+                            <td><?= number_format($l['monthly_payment'],2) ?></td>
+                            <td><strong><?= number_format($l['total_amount'],2) ?></strong></td>
                             <td>
                                 <span class="badge bg-<?= $l['status']=='activo'?'warning':($l['status']=='pagado'?'success':'danger') ?>">
                                     <?= $l['status'] ?>
