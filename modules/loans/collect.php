@@ -63,9 +63,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 } else {
                     // Pago menor al interes: registra el abono, no modifica el monto original
-                    $db->query("UPDATE loan_installments SET `paid_amount` = `paid_amount` + $amount_paid, paid_date='$fecha_pago' WHERE loan_id=$loan_id_pay AND status='pendiente' LIMIT 1");
+                    $upd = $db->query("UPDATE loan_installments SET `paid_amount` = `paid_amount` + $amount_paid, paid_date='$fecha_pago' WHERE loan_id=$loan_id_pay AND status='pendiente' LIMIT 1");
+                    if (!$upd || $db->affected_rows == 0) {
+                        throw new Exception("No se encontr&oacute; la cuota pendiente para este pr&eacute;stamo");
+                    }
                     $db->commit();
-                    $_SESSION['success'] = "Abono de $amount_paid registrado";
+                    $_SESSION['success'] = "Abono de ".number_format($amount_paid,2)." registrado";
                     redirect("/modules/loans/collect.php?loan_id=$loan_id_pay");
                 }
             }
