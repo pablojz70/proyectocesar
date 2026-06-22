@@ -111,7 +111,7 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                             <td><?= h($l['client_name']) ?></td>
                             <td><?= $l['currency'] ?></td>
                             <td><?= number_format($l['amount'],2) ?></td>
-                            <td><?= $l['interest_rate'] ?>%</td>
+                            <td><?= intval($l['interest_rate']) ?>%</td>
                             <td><?= number_format($l['total_interest'],2) ?></td>
                             <td><?= date('d/m/Y', strtotime($l['start_date'])) ?></td>
                             <td><?= $l['loan_type'] === 'mensual' ? 'Mensual' : $l['term_months'] . ' meses' ?></td>
