@@ -43,25 +43,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db->query("UPDATE loans SET status='pagado', total_amount = total_amount - $a_capital WHERE id=$loan_id_pay");
                 $db->query("UPDATE loan_installments SET status='pagada', paid_date='$fecha_pago' WHERE loan_id=$loan_id_pay AND status='pendiente'");
             } else {
-                $interes_vencido = $loan['monthly_payment'] - ($loan['total_amount'] - $loan['amount']);
                 $a_capital = max(0, $amount_paid - $loan['monthly_payment']);
 
                 if ($a_capital > 0) {
+                    // Pago mayor al interes: paga interes, reduce capital, crea nueva cuota
                     $db->query("UPDATE loans SET total_amount = total_amount - $a_capital WHERE id=$loan_id_pay");
-                }
+                    $db->query("UPDATE loan_installments SET status='pagada', paid_date='$fecha_pago' WHERE loan_id=$loan_id_pay AND status='pendiente' LIMIT 1");
 
-                $db->query("UPDATE loan_installments SET status='pagada', paid_date='$fecha_pago' WHERE loan_id=$loan_id_pay AND status='pendiente' LIMIT 1");
-
-                $nuevo_capital = $loan['total_amount'] - $cap_pagado - $a_capital;
-                if ($nuevo_capital <= 0) {
-                    $db->query("UPDATE loans SET status='pagado' WHERE id=$loan_id_pay");
+                    $nuevo_capital = $loan['total_amount'] - $cap_pagado - $a_capital;
+                    if ($nuevo_capital <= 0) {
+                        $db->query("UPDATE loans SET status='pagado' WHERE id=$loan_id_pay");
+                    } else {
+                        $nueva_fecha = date('Y-m-d', strtotime('+1 month'));
+                        $nuevo_interes = $nuevo_capital * $loan['interest_rate'] / 100;
+                        $stmt2 = $db->prepare("INSERT INTO loan_installments (loan_id, installment_number, due_date, amount, status) VALUES (?, ?, ?, ?, 'pendiente')");
+                        $siguiente = $db->query("SELECT COALESCE(MAX(installment_number),0)+1 as n FROM loan_installments WHERE loan_id=$loan_id_pay")->fetch_assoc()['n'];
+                        $stmt2->bind_param("iisd", $loan_id_pay, $siguiente, $nueva_fecha, $nuevo_interes);
+                        $stmt2->execute();
+                    }
                 } else {
-                    $nueva_fecha = date('Y-m-d', strtotime('+1 month'));
-                    $nuevo_interes = $nuevo_capital * $loan['interest_rate'] / 100;
-                    $stmt2 = $db->prepare("INSERT INTO loan_installments (loan_id, installment_number, due_date, amount, status) VALUES (?, ?, ?, ?, 'pendiente')");
-                    $siguiente = $db->query("SELECT COALESCE(MAX(installment_number),0)+1 as n FROM loan_installments WHERE loan_id=$loan_id_pay")->fetch_assoc()['n'];
-                    $stmt2->bind_param("iisd", $loan_id_pay, $siguiente, $nueva_fecha, $nuevo_interes);
-                    $stmt2->execute();
+                    // Pago menor al interes: reduce el monto de la cuota pendiente
+                    $restante = $loan['monthly_payment'] - $amount_paid;
+                    $db->query("UPDATE loan_installments SET amount = $restante WHERE loan_id=$loan_id_pay AND status='pendiente' LIMIT 1");
                 }
             }
         } else {
