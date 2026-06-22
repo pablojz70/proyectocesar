@@ -165,6 +165,7 @@ require_once '../../includes/header.php';
                                 <th>Monto</th>
                                 <th>Estado</th>
                                 <th>Fecha Pago</th>
+                                <th class="no-print">Acci&oacute;n</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -178,6 +179,11 @@ require_once '../../includes/header.php';
                                 <td><?= number_format($inst['amount'],2) ?> <?= $loan['currency'] ?></td>
                                 <td><span class="badge bg-<?= $inst['status']=='pagada'?'success':($inst['status']=='vencida'?'danger':'warning') ?>"><?= $inst['status'] ?></span></td>
                                 <td><?= $inst['paid_date'] ? date('d/m/Y', strtotime($inst['paid_date'])) : '-' ?></td>
+                                <td class="no-print">
+                                    <?php if ($inst['status'] === 'pagada'): ?>
+                                    <a href="delete_inst.php?id=<?= $inst['id'] ?>&loan_id=<?= $loan['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar esta cuota? Se revertir\u00e1 el pago.')" title="Eliminar"><i class="bi bi-trash"></i></a>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                             <?php endwhile; ?>
                         </tbody>
