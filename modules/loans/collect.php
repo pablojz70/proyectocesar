@@ -208,12 +208,12 @@ require_once '../../includes/header.php';
                 </div>
                 <?php endif; ?>
 
-                <div class="d-flex gap-2 flex-wrap">
-                    <button type="submit" name="action" value="normal" class="btn btn-success"><i class="bi bi-check-circle"></i> Procesar Pago</button>
+                <div class="d-flex gap-2">
+                    <button type="submit" name="action" value="normal" class="btn btn-success flex-fill"><i class="bi bi-check-circle"></i> Procesar Pago</button>
                     <?php if ($loan['loan_type'] === 'mensual'): ?>
-                    <button type="button" class="btn btn-danger" onclick="calcularCancelacion()"><i class="bi bi-x-circle"></i> Cancelar Totalidad</button>
+                    <button type="button" class="btn btn-danger flex-fill" onclick="calcularCancelacion()"><i class="bi bi-x-circle"></i> Cancelar Totalidad</button>
                     <?php endif; ?>
-                    <a href="history.php" class="btn btn-secondary">Cancelar</a>
+                    <a href="history.php" class="btn btn-secondary flex-fill">Cancelar</a>
                 </div>
 
                 <?php if ($loan['loan_type'] === 'mensual'): ?>
