@@ -192,7 +192,7 @@ require_once '../../includes/header.php';
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Fecha de Pago</label>
-                        <input type="date" name="fecha_pago" class="form-control" value="<?= date('Y-m-d') ?>">
+                        <input type="date" name="fecha_pago" class="form-control" value="<?= date('Y-m-d') ?>" min="<?= $loan['start_date'] ?>" max="<?= date('Y-m-d') ?>">
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Moneda</label>
