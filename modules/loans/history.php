@@ -109,7 +109,7 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif FROM loans 
                             <td><?= $l['status'] === 'pagado' ? '-' : $mora ?> <?= $mora == 1 ? 'mes' : 'meses' ?></td>
                             <td><?= $l['loan_type'] === 'mensual' ? 'Mensual' : $l['term_months'] . ' meses' ?></td>
                             <td><?= number_format($l['monthly_payment'],2) ?></td>
-                            <td><strong><?= number_format($l['total_amount'],2) ?></strong></td>
+                            <td><strong><?= $l['loan_type'] === 'mensual' ? number_format($l['amount'] + ($l['monthly_payment'] * $mora),2) : number_format($l['total_amount'],2) ?></strong></td>
                             <td>
                                 <span class="badge bg-<?= $l['status']=='activo'?'warning':($l['status']=='pagado'?'success':'danger') ?>">
                                     <?= $l['status'] ?>
