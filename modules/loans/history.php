@@ -74,15 +74,15 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif FROM loans 
                         <tr>
                             <th>#</th>
                             <th>Cliente</th>
+                            <th>Moneda</th>
                             <th>Monto</th>
-                            <th>Interés</th>
+                            <th>Inter&eacute;s</th>
+                            <th>Inicio</th>
+                            <th>Mora</th>
                             <th>Total</th>
                             <th>Cuota</th>
                             <th>Plazo</th>
-                            <th>Moneda</th>
                             <th>Estado</th>
-                            <th>Mora</th>
-                            <th>Inicio</th>
                             <th class="no-print">Acciones</th>
                         </tr>
                     </thead>
@@ -102,19 +102,19 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif FROM loans 
                         <tr>
                             <td><?= $l['id'] ?></td>
                             <td><?= h($l['client_name']) ?></td>
+                            <td><?= $l['currency'] ?></td>
                             <td><?= number_format($l['amount'],2) ?></td>
                             <td><?= number_format($l['total_interest'],2) ?> (<?= $l['interest_rate'] ?>%)</td>
+                            <td><?= date('d/m/Y', strtotime($l['start_date'])) ?></td>
+                            <td><?= $l['status'] === 'pagado' ? '-' : $mora ?> <?= $mora == 1 ? 'mes' : 'meses' ?></td>
                             <td><strong><?= number_format($l['total_amount'],2) ?></strong></td>
                             <td><?= number_format($l['monthly_payment'],2) ?></td>
-                            <td><?= $l['term_months'] ?> meses</td>
-                            <td><?= $l['currency'] ?></td>
+                            <td><?= $l['term_months'] ?> <?= $l['loan_type']=='mensual'?'(mensual)':'' ?></td>
                             <td>
                                 <span class="badge bg-<?= $l['status']=='activo'?'warning':($l['status']=='pagado'?'success':'danger') ?>">
                                     <?= $l['status'] ?>
                                 </span>
                             </td>
-                            <td><?= $l['status'] === 'pagado' ? '-' : $mora ?> <?= $mora == 1 ? 'mes' : 'meses' ?></td>
-                            <td><?= date('d/m/Y', strtotime($l['start_date'])) ?></td>
                             <td class="no-print">
                                 <a href="collect.php?loan_id=<?= $l['id'] ?>" class="btn btn-sm btn-success" title="Cobrar"><i class="bi bi-cash"></i></a>
                                 <a href="edit.php?id=<?= $l['id'] ?>" class="btn btn-sm btn-warning" title="Editar"><i class="bi bi-pencil"></i></a>
