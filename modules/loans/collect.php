@@ -64,6 +64,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     // Pago menor al interes: registra el abono, no modifica el monto original
                     $db->query("UPDATE loan_installments SET `paid_amount` = `paid_amount` + $amount_paid, paid_date='$fecha_pago' WHERE loan_id=$loan_id_pay AND status='pendiente' LIMIT 1");
+                    $db->commit();
+                    $_SESSION['success'] = "Abono de $amount_paid registrado";
+                    redirect("/modules/loans/collect.php?loan_id=$loan_id_pay");
                 }
             }
         } else {
