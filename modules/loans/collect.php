@@ -200,11 +200,6 @@ require_once '../../includes/header.php';
                             <option value="<?= $loan['currency'] ?>"><?= $loan['currency'] ?></option>
                         </select>
                     </div>
-                    <?php if ($loan['loan_type'] === 'mensual'): ?>
-                    <div class="col-md-4 d-flex align-items-end">
-                        <button type="button" class="btn btn-danger w-100" onclick="calcularCancelacion()"><i class="bi bi-x-circle"></i> Cancelar Totalidad</button>
-                    </div>
-                    <?php endif; ?>
                 </div>
 
                 <?php if ($loan['loan_type'] === 'plazo'): ?>
@@ -213,8 +208,13 @@ require_once '../../includes/header.php';
                 </div>
                 <?php endif; ?>
 
-                <button type="submit" name="action" value="normal" class="btn btn-success btn-lg"><i class="bi bi-check-circle"></i> Procesar Pago</button>
-                <a href="history.php" class="btn btn-secondary">Cancelar</a>
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" name="action" value="normal" class="btn btn-success"><i class="bi bi-check-circle"></i> Procesar Pago</button>
+                    <?php if ($loan['loan_type'] === 'mensual'): ?>
+                    <button type="button" class="btn btn-danger" onclick="calcularCancelacion()"><i class="bi bi-x-circle"></i> Cancelar Totalidad</button>
+                    <?php endif; ?>
+                    <a href="history.php" class="btn btn-secondary">Cancelar</a>
+                </div>
 
                 <?php if ($loan['loan_type'] === 'mensual'): ?>
                 <div id="cancelacion_info" style="display:none" class="card bg-light mt-3 p-3">
