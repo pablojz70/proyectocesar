@@ -41,14 +41,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $nuevo_capital = $capital_restante - $a_capital;
 
                 $db->query("UPDATE loans SET status='pagado', total_amount = total_amount - $a_capital WHERE id=$loan_id_pay");
-                $db->query("UPDATE loan_installments SET status='pagada', paid_date='$fecha_pago', paid_amount = amount WHERE loan_id=$loan_id_pay AND status='pendiente'");
+                $db->query("UPDATE loan_installments SET status='pagada', paid_date='$fecha_pago', `paid_amount` = amount WHERE loan_id=$loan_id_pay AND status='pendiente'");
             } else {
                 $a_capital = max(0, $amount_paid - $loan['monthly_payment']);
 
                 if ($a_capital > 0) {
                     // Pago mayor al interes: paga interes, reduce capital, crea nueva cuota
                     $db->query("UPDATE loans SET total_amount = total_amount - $a_capital WHERE id=$loan_id_pay");
-                    $db->query("UPDATE loan_installments SET status='pagada', paid_date='$fecha_pago', paid_amount = amount WHERE loan_id=$loan_id_pay AND status='pendiente' LIMIT 1");
+                    $db->query("UPDATE loan_installments SET status='pagada', paid_date='$fecha_pago', `paid_amount` = amount WHERE loan_id=$loan_id_pay AND status='pendiente' LIMIT 1");
 
                     $nuevo_capital = $loan['total_amount'] - $cap_pagado - $a_capital;
                     if ($nuevo_capital <= 0) {
@@ -63,7 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 } else {
                     // Pago menor al interes: reduce el monto de la cuota, registra el abono
-                    $db->query("UPDATE loan_installments SET amount = $restante, paid_amount = paid_amount + $amount_paid WHERE loan_id=$loan_id_pay AND status='pendiente' LIMIT 1");
+                    $restante = $loan['monthly_payment'] - $amount_paid;
+                    $db->query("UPDATE loan_installments SET amount = $restante, `paid_amount` = `paid_amount` + $amount_paid WHERE loan_id=$loan_id_pay AND status='pendiente' LIMIT 1");
                 }
             }
         } else {
@@ -78,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($amount_paid < $total_due) throw new Exception("Monto insuficiente");
             foreach ($installment_ids as $iid) {
                 $iid = intval($iid);
-                $db->query("UPDATE loan_installments SET status='pagada', paid_date='$fecha_pago', paid_amount = amount WHERE id=$iid");
+                $db->query("UPDATE loan_installments SET status='pagada', paid_date='$fecha_pago', `paid_amount` = amount WHERE id=$iid");
             }
             $pending = $db->query("SELECT COUNT(*) as c FROM loan_installments WHERE loan_id=$loan_id_pay AND status='pendiente'")->fetch_assoc()['c'];
             if ($pending == 0) $db->query("UPDATE loans SET status='pagado' WHERE id=$loan_id_pay");
