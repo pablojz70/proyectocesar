@@ -144,6 +144,7 @@ require_once '../../includes/header.php';
                 <?php if ($loan['loan_type'] === 'mensual'): ?>
                 <div class="col-md-3"><strong>Inter&eacute;s Mensual:</strong> <?= number_format($loan['monthly_payment'],2) ?> <?= $loan['currency'] ?></div>
                 <div class="col-md-3"><strong>Capital Restante:</strong> <span id="capital_restante"><?= number_format($capital_restante,2) ?></span> <?= $loan['currency'] ?></div>
+                <div class="col-md-3"><strong>Fecha Inicio:</strong> <?= date('d/m/Y', strtotime($loan['start_date'])) ?></div>
                 <?php else: ?>
                 <div class="col-md-3"><strong>Total:</strong> <?= number_format($loan['total_amount'],2) ?> <?= $loan['currency'] ?></div>
                 <div class="col-md-3"><strong>Cuota:</strong> <?= number_format($loan['monthly_payment'],2) ?> <?= $loan['currency'] ?></div>
