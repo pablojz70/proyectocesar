@@ -18,7 +18,12 @@ if ($estado) $where .= " AND l.status = '$estado'";
 if ($fecha_desde) $where .= " AND DATE(l.created_at) >= '$fecha_desde'";
 if ($fecha_hasta) $where .= " AND DATE(l.created_at) <= '$fecha_hasta'";
 
-$loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif FROM loans l JOIN clients c ON c.id=l.client_id WHERE $where ORDER BY l.id DESC");
+$loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
+    COALESCE((SELECT SUM(paid_amount) FROM loan_installments WHERE loan_id=l.id),0) as total_abonado
+    FROM loans l
+    JOIN clients c ON c.id=l.client_id
+    WHERE $where
+    ORDER BY l.id DESC");
 ?>
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -75,20 +80,21 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif FROM loans 
                             <th>#</th>
                             <th>Cliente</th>
                             <th>Moneda</th>
-                            <th>Monto</th>
+                            <th>Capital</th>
                             <th>Inter&eacute;s</th>
                             <th>Inicio</th>
-                            <th>Mora</th>
                             <th>Tipo</th>
+                            <th>Mora</th>
                             <th>Cuota</th>
                             <th>Total</th>
+                            <th>Abono</th>
                             <th>Estado</th>
                             <th class="no-print">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if ($loans->num_rows === 0): ?>
-                        <tr><td colspan="12" class="text-center py-4 text-muted">No hay pr&eacute;stamos registrados</td></tr>
+                        <tr><td colspan="13" class="text-center py-4 text-muted">No hay pr&eacute;stamos registrados</td></tr>
                         <?php endif; ?>
                         <?php while($l = $loans->fetch_assoc()): 
                             $start = new DateTime($l['start_date']);
@@ -104,12 +110,13 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif FROM loans 
                             <td><?= h($l['client_name']) ?></td>
                             <td><?= $l['currency'] ?></td>
                             <td><?= number_format($l['amount'],2) ?></td>
-                            <td><?= number_format($l['total_interest'],2) ?> (<?= $l['interest_rate'] ?>%)</td>
+                            <td><?= number_format($l['total_interest'],2) ?></td>
                             <td><?= date('d/m/Y', strtotime($l['start_date'])) ?></td>
-                            <td><?= $l['status'] === 'pagado' ? '-' : $mora ?> <?= $mora == 1 ? 'mes' : 'meses' ?></td>
                             <td><?= $l['loan_type'] === 'mensual' ? 'Mensual' : $l['term_months'] . ' meses' ?></td>
+                            <td><?= $l['status'] === 'pagado' ? '-' : $mora ?></td>
                             <td><?= number_format($l['monthly_payment'],2) ?></td>
                             <td><strong><?= $l['loan_type'] === 'mensual' ? number_format($l['amount'] + ($l['monthly_payment'] * $mora),2) : number_format($l['total_amount'],2) ?></strong></td>
+                            <td><?= $l['total_abonado'] > 0 ? number_format($l['total_abonado'],2) : '-' ?></td>
                             <td>
                                 <span class="badge bg-<?= $l['status']=='activo'?'warning':($l['status']=='pagado'?'success':'danger') ?>">
                                     <?= $l['status'] ?>
