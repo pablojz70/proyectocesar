@@ -62,9 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmt2->execute();
                     }
                 } else {
-                    // Pago menor al interes: reduce el monto de la cuota, registra el abono
-                    $restante = $loan['monthly_payment'] - $amount_paid;
-                    $db->query("UPDATE loan_installments SET amount = $restante, `paid_amount` = `paid_amount` + $amount_paid WHERE loan_id=$loan_id_pay AND status='pendiente' LIMIT 1");
+                    // Pago menor al interes: registra el abono, no modifica el monto original
+                    $db->query("UPDATE loan_installments SET `paid_amount` = `paid_amount` + $amount_paid, paid_date='$fecha_pago' WHERE loan_id=$loan_id_pay AND status='pendiente' LIMIT 1");
                 }
             }
         } else {
@@ -168,6 +167,7 @@ require_once '../../includes/header.php';
                                 <th>Fecha Vencimiento</th>
                                 <th>Monto</th>
                                 <th>Abonado</th>
+                                <th>Resta</th>
                                 <th>Estado</th>
                                 <th>Fecha Pago</th>
                                 <th class="no-print">Acci&oacute;n</th>
@@ -183,10 +183,11 @@ require_once '../../includes/header.php';
                                 <td><?= date('d/m/Y', strtotime($inst['due_date'])) ?></td>
                                 <td><?= number_format($inst['amount'],2) ?> <?= $loan['currency'] ?></td>
                                 <td><?= $inst['paid_amount'] > 0 ? number_format($inst['paid_amount'],2) . ' ' . $loan['currency'] : '-' ?></td>
+                                <td><?= number_format(max(0, $inst['amount'] - $inst['paid_amount']),2) ?> <?= $loan['currency'] ?></td>
                                 <td><span class="badge bg-<?= $inst['status']=='pagada'?'success':($inst['status']=='vencida'?'danger':'warning') ?>"><?= $inst['status'] ?></span></td>
                                 <td><?= $inst['paid_date'] ? date('d/m/Y', strtotime($inst['paid_date'])) : '-' ?></td>
                                 <td class="no-print">
-                                    <?php if ($inst['status'] === 'pagada'): ?>
+                                    <?php if ($inst['status'] === 'pagada' || $inst['paid_amount'] > 0): ?>
                                     <a href="delete_inst.php?id=<?= $inst['id'] ?>&loan_id=<?= $loan['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar esta cuota? Se revertir\u00e1 el pago.')" title="Eliminar"><i class="bi bi-trash"></i></a>
                                     <?php endif; ?>
                                 </td>
