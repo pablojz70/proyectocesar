@@ -81,15 +81,24 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif FROM loans 
                             <th>Plazo</th>
                             <th>Moneda</th>
                             <th>Estado</th>
+                            <th>Mora</th>
                             <th>Inicio</th>
                             <th class="no-print">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if ($loans->num_rows === 0): ?>
-                        <tr><td colspan="11" class="text-center py-4 text-muted">No hay préstamos registrados</td></tr>
+                        <tr><td colspan="12" class="text-center py-4 text-muted">No hay pr&eacute;stamos registrados</td></tr>
                         <?php endif; ?>
-                        <?php while($l = $loans->fetch_assoc()): ?>
+                        <?php while($l = $loans->fetch_assoc()): 
+                            $start = new DateTime($l['start_date']);
+                            $now = new DateTime();
+                            $diff = $start->diff($now);
+                            $mora = ($diff->y * 12) + $diff->m;
+                            if ($l['loan_type'] === 'mensual' && $l['status'] === 'activo') {
+                                $mora += $diff->d > 15 ? 1 : 0;
+                            }
+                        ?>
                         <tr>
                             <td><?= $l['id'] ?></td>
                             <td><?= h($l['client_name']) ?></td>
@@ -104,6 +113,7 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif FROM loans 
                                     <?= $l['status'] ?>
                                 </span>
                             </td>
+                            <td><?= $l['status'] === 'pagado' ? '-' : $mora ?> <?= $mora == 1 ? 'mes' : 'meses' ?></td>
                             <td><?= date('d/m/Y', strtotime($l['start_date'])) ?></td>
                             <td class="no-print">
                                 <a href="collect.php?loan_id=<?= $l['id'] ?>" class="btn btn-sm btn-success" title="Cobrar"><i class="bi bi-cash"></i></a>
