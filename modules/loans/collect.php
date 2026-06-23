@@ -165,36 +165,6 @@ require_once '../../includes/header.php';
         </div>
     </div>
 
-    <!-- ── CAPITAL RESTANTE ── -->
-    <div class="row mb-3">
-        <div class="col-md-3">
-            <div class="card p-2 text-center">
-                <small>Capital Original</small>
-                <strong><?= number_format($loan['amount'],2) ?> <?= $loan['currency'] ?></strong>
-            </div>
-        </div>
-        <?php if ($loan['loan_type'] === 'mensual'): ?>
-        <div class="col-md-3">
-            <div class="card p-2 text-center">
-                <small>Interés Mensual</small>
-                <strong><?= number_format($interes_mensual,2) ?> <?= $loan['currency'] ?></strong>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card p-2 text-center">
-                <small>Deuda Completa</small>
-                <strong><?= number_format($capital_restante,2) ?> <?= $loan['currency'] ?></strong>
-            </div>
-        </div>
-        <?php endif; ?>
-        <div class="col-md-3">
-            <div class="card p-2 text-center">
-                <small>Total Abonado</small>
-                <strong><?= number_format($total_pagado,2) ?> <?= $loan['currency'] ?></strong>
-            </div>
-        </div>
-    </div>
-
     <!-- ── HISTORIAL DE PAGOS ── -->
     <div class="card mb-3">
         <div class="card-header">Historial de Pagos</div>
