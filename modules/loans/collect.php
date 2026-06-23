@@ -111,6 +111,7 @@ if ($loan_id > 0) {
         $capital_restante = max(0, $loan['amount'] - $exc);
     }
     $total_cuota = $loan['loan_type'] === 'mensual' ? $loan['amount'] + ($interes_mensual * $mora) : $loan['total_amount'];
+    $deuda_restante = max(0, $total_cuota - $total_pagado);
 }
 
 $page_title = 'Cobro de Préstamo';
@@ -153,7 +154,7 @@ require_once '../../includes/header.php';
                         <td><?= $loan['loan_type'] === 'mensual' ? 'Mensual' : 'Plazo' ?></td>
                         <td><?= $loan['status'] === 'pagado' ? '-' : $mora ?></td>
                         <td><?= number_format($total_cuota,2) ?></td>
-                        <td><strong><?= number_format($total_cuota,2) ?></strong></td>
+                        <td><strong><?= number_format($deuda_restante,2) ?></strong></td>
                         <td><strong><?= number_format($capital_restante,2) ?></strong></td>
                         <td><?= $total_pagado > 0 ? number_format($total_pagado,2) : '-' ?></td>
                     </tr>
