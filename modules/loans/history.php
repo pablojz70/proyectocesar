@@ -97,6 +97,7 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                         <tr><td colspan="13" class="text-center py-4 text-muted">No hay pr&eacute;stamos registrados</td></tr>
                         <?php endif; ?>
                         <?php while($l = $loans->fetch_assoc()): 
+                            // Calcular mora y capital restante
                             if ($l['loan_type'] === 'plazo') {
                                 $cv = $l['term_months'] > 0 ? $l['total_amount'] / $l['term_months'] : 0;
                                 $pc = $cv > 0 ? floor($l['total_abonado'] / $cv) : 0;
@@ -111,6 +112,7 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                                 } else {
                                     $mora = 0;
                                 }
+                                $capital_restante_val = max(0, $l['term_months'] - $pc);
                             } else {
                                 $start = new DateTime($l['start_date']);
                                 $now = new DateTime();
@@ -119,6 +121,9 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                                 $meses_total += $diff->d > 15 ? 1 : 0;
                                 $meses_pagados = $l['monthly_payment'] > 0 ? floor($l['total_abonado'] / $l['monthly_payment']) : 0;
                                 $mora = max(0, $meses_total - $meses_pagados);
+                                $a_pagar = $l['monthly_payment'] * ($mora > 0 ? $mora : 1);
+                                $exc = max(0, $l['total_abonado'] - $a_pagar);
+                                $capital_restante_val = max(0, $l['amount'] - $exc);
                             }
                         ?>
                         <tr>
@@ -133,9 +138,7 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                             <td><strong><?= $l['loan_type'] === 'mensual' ? number_format($l['amount'] + ($l['monthly_payment'] * ($mora > 0 ? $mora : 1)),2) : number_format(max(0, $l['total_amount'] - $l['total_abonado']),2) ?></strong></td>
                             <td><?php
                                 if ($l['loan_type'] === 'plazo') {
-                                    $cv = $l['term_months'] > 0 ? $l['total_amount'] / $l['term_months'] : 0;
-                                    $pc = $cv > 0 ? floor($l['total_abonado'] / $cv) : 0;
-                                    echo max(0, $l['term_months'] - $pc) . ' cuotas';
+                                    echo $capital_restante_val . ' cuotas';
                                 } else {
                                     $a_pagar = $l['monthly_payment'] * ($mora > 0 ? $mora : 1);
                                     $exc = max(0, $l['total_abonado'] - $a_pagar);
@@ -143,9 +146,23 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                                 }
                             ?></td>
                             <td><?= $l['total_abonado'] > 0 ? number_format($l['total_abonado'],2) : '-' ?></td>
-                            <td>
-                                <span class="badge bg-<?= $l['status']=='activo'?'warning':($l['status']=='pagado'?'success':'danger') ?>">
-                                    <?= $l['status'] ?>
+                            <td><?php
+                                // Calcular estado segun datos
+                                if ($l['loan_type'] === 'plazo') {
+                                    $cv = $l['term_months'] > 0 ? $l['total_amount'] / $l['term_months'] : 0;
+                                    $pc = $cv > 0 ? floor($l['total_abonado'] / $cv) : 0;
+                                    $cuotas_rest = $l['term_months'] - $pc;
+                                    if ($mora > 0) $estado_mostrar = 'vencido';
+                                    elseif ($cuotas_rest <= 0 || $l['total_abonado'] >= $l['total_amount']) $estado_mostrar = 'pagado';
+                                    else $estado_mostrar = 'activo';
+                                } else {
+                                    if ($mora > 0) $estado_mostrar = 'vencido';
+                                    elseif ($capital_restante_val <= 0) $estado_mostrar = 'pagado';
+                                    else $estado_mostrar = 'activo';
+                                }
+                                ?>
+                                <span class="badge bg-<?= $estado_mostrar=='activo'?'warning':($estado_mostrar=='pagado'?'success':'danger') ?>">
+                                    <?= $estado_mostrar ?>
                                 </span>
                             </td>
                             <td class="no-print">
