@@ -182,7 +182,7 @@ require_once '../../includes/header.php';
         </div>
         <div class="col-md-3">
             <div class="card p-2 text-center">
-                <small>Capital Restante</small>
+                <small>Deuda Completa</small>
                 <strong><?= number_format($capital_restante,2) ?> <?= $loan['currency'] ?></strong>
             </div>
         </div>
