@@ -102,8 +102,10 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                                 $start = new DateTime($l['start_date']);
                                 $now = new DateTime();
                                 $diff = $start->diff($now);
-                                $mora = ($diff->y * 12) + $diff->m;
-                                if ($l['status'] === 'activo') $mora += $diff->d > 15 ? 1 : 0;
+                                $meses_total = ($diff->y * 12) + $diff->m;
+                                $meses_total += $diff->d > 15 ? 1 : 0;
+                                $meses_pagados = $l['monthly_payment'] > 0 ? floor($l['total_abonado'] / $l['monthly_payment']) : 0;
+                                $mora = max(0, $meses_total - $meses_pagados);
                             }
                         ?>
                         <tr>
