@@ -9,90 +9,75 @@ $where = "1=1";
 $loan_id = intval($_GET['loan_id'] ?? 0);
 $client_id = intval($_GET['client_id'] ?? 0);
 
+// ── POST: Registrar pago ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $loan_id_pay = intval($_POST['loan_id']);
-    $loan = $db->query("SELECT * FROM loans WHERE id=$loan_id_pay AND $where")->fetch_assoc();
-    if (!$loan) { $_SESSION['error'] = 'Pr&eacute;stamo no encontrado'; redirect('/modules/loans/history.php'); }
+    $monto = floatval($_POST['monto'] ?? 0);
+    $fecha = $_POST['fecha_pago'] ?? date('Y-m-d');
 
-    $amount_paid = floatval($_POST['amount_paid'] ?? 0);
-    $action = $_POST['action'] ?? 'normal';
-    $fecha_pago = $_POST['fecha_pago'] ?? date('Y-m-d');
+    if ($monto <= 0) {
+        $_SESSION['error'] = 'Debe ingresar un monto válido';
+        redirect("/modules/loans/collect.php?loan_id=$loan_id_pay");
+    }
+
+    $loan = $db->query("SELECT * FROM loans WHERE id=$loan_id_pay AND $where")->fetch_assoc();
+    if (!$loan) { $_SESSION['error'] = 'Préstamo no encontrado'; redirect('/modules/loans/history.php'); }
 
     $db->begin_transaction();
     try {
-        if ($loan['loan_type'] === 'mensual') {
-            $cap_pagado = floatval($_POST['capital_pagado'] ?? 0);
-            $interes = floatval($_POST['interes'] ?? 0);
-            $a_capital = floatval($_POST['a_capital'] ?? 0);
+        if ($loan['loan_type'] === 'plazo') {
+            // PLAZO: sumar al abono, si cubre cuota(s), descontar
+            $db->query("INSERT INTO loan_payments (loan_id, amount, payment_date) VALUES ($loan_id_pay, $monto, '$fecha')");
+            $total_pagado = $db->query("SELECT COALESCE(SUM(amount),0) as t FROM loan_payments WHERE loan_id=$loan_id_pay")->fetch_assoc()['t'];
 
-            if ($action === 'cancelar_total') {
-                $capital_restante = $loan['total_amount'] - $cap_pagado;
-                $dias_transcurridos = max(1, (time() - strtotime($loan['start_date'])) / 86400);
-                $interes_diario = ($loan['amount'] * $loan['interest_rate'] / 100) / 30;
-                $interes_devengado = $interes_diario * $dias_transcurridos;
-                $total_cancelar = $capital_restante + $interes_devengado;
-
-                if ($amount_paid < $total_cancelar - 0.01) {
-                    throw new Exception("El monto mínimo para cancelar es " . number_format($total_cancelar, 2));
-                }
-
-                $a_capital = $amount_paid - $interes_devengado;
-                $interes = $interes_devengado;
-                $nuevo_capital = $capital_restante - $a_capital;
-
-                $db->query("UPDATE loans SET status='pagado', total_amount = total_amount - $a_capital WHERE id=$loan_id_pay");
-                $db->query("UPDATE loan_installments SET status='pagada', paid_date='$fecha_pago', `paid_amount` = amount WHERE loan_id=$loan_id_pay AND status='pendiente'");
-            } else {
-                $a_capital = max(0, $amount_paid - $loan['monthly_payment']);
-
-                if ($a_capital > 0) {
-                    // Pago mayor al interes: paga interes, reduce capital, crea nueva cuota
-                    $db->query("UPDATE loans SET total_amount = total_amount - $a_capital WHERE id=$loan_id_pay");
-                    $db->query("UPDATE loan_installments SET status='pagada', paid_date='$fecha_pago', `paid_amount` = amount WHERE loan_id=$loan_id_pay AND status='pendiente' LIMIT 1");
-
-                    $nuevo_capital = $loan['total_amount'] - $cap_pagado - $a_capital;
-                    if ($nuevo_capital <= 0) {
-                        $db->query("UPDATE loans SET status='pagado' WHERE id=$loan_id_pay");
-                    } else {
-                        $nueva_fecha = date('Y-m-d', strtotime('+1 month'));
-                        $nuevo_interes = $nuevo_capital * $loan['interest_rate'] / 100;
-                        $stmt2 = $db->prepare("INSERT INTO loan_installments (loan_id, installment_number, due_date, amount, status) VALUES (?, ?, ?, ?, 'pendiente')");
-                        $siguiente = $db->query("SELECT COALESCE(MAX(installment_number),0)+1 as n FROM loan_installments WHERE loan_id=$loan_id_pay")->fetch_assoc()['n'];
-                        $stmt2->bind_param("iisd", $loan_id_pay, $siguiente, $nueva_fecha, $nuevo_interes);
-                        $stmt2->execute();
-                    }
-                } else {
-                    // Pago menor al interes: registra el abono, no modifica el monto original
-                    $upd = $db->query("UPDATE loan_installments SET `paid_amount` = `paid_amount` + $amount_paid, paid_date='$fecha_pago' WHERE loan_id=$loan_id_pay AND status='pendiente' LIMIT 1");
-                    if (!$upd || $db->affected_rows == 0) {
-                        throw new Exception("No se encontr&oacute; la cuota pendiente para este pr&eacute;stamo");
-                    }
-                    $db->commit();
-                    $_SESSION['success'] = "Abono de ".number_format($amount_paid,2)." registrado";
-                    redirect("/modules/loans/collect.php?loan_id=$loan_id_pay");
-                }
+            // Marcar cuotas pagadas segun el total abonado
+            $cuotas = $db->query("SELECT * FROM loan_installments WHERE loan_id=$loan_id_pay AND status='pendiente' ORDER BY installment_number");
+            $acumulado = 0;
+            while ($c = $cuotas->fetch_assoc()) {
+                $acumulado += $c['amount'];
+                if ($total_pagado >= $acumulado) {
+                    $db->query("UPDATE loan_installments SET status='pagada', paid_date='$fecha', paid_amount={$c['amount']} WHERE id={$c['id']}");
+                } else break;
             }
+
+            $pendientes = $db->query("SELECT COUNT(*) as c FROM loan_installments WHERE loan_id=$loan_id_pay AND status='pendiente'")->fetch_assoc()['c'];
+            if ($pendientes == 0) $db->query("UPDATE loans SET status='pagado' WHERE id=$loan_id_pay");
+
         } else {
-            $installment_ids = $_POST['installment_ids'] ?? [];
-            if (empty($installment_ids)) throw new Exception("Seleccione al menos una cuota");
-            $total_due = 0;
-            foreach ($installment_ids as $iid) {
-                $iid = intval($iid);
-                $inst = $db->query("SELECT * FROM loan_installments WHERE id=$iid AND loan_id=$loan_id_pay AND status='pendiente'")->fetch_assoc();
-                if ($inst) $total_due += $inst['amount'];
+            // MENSUAL: acumular abonos
+            $db->query("INSERT INTO loan_payments (loan_id, amount, payment_date) VALUES ($loan_id_pay, $monto, '$fecha')");
+            $total_pagado = $db->query("SELECT COALESCE(SUM(amount),0) as t FROM loan_payments WHERE loan_id=$loan_id_pay")->fetch_assoc()['t'];
+
+            $interes_mensual = $loan['monthly_payment'];
+            $capital_restante = $loan['total_amount'];
+            $abonado_capital = 0;
+
+            // Calcular mora actual
+            $start = new DateTime($loan['start_date']);
+            $now = new DateTime($fecha);
+            $diff = $start->diff($now);
+            $mora_actual = ($diff->y * 12) + $diff->m;
+            $mora_actual += $diff->d > 15 ? 1 : 0;
+
+            // Cuanto interes se debe por mora
+            $interes_devengado = $interes_mensual * $mora_actual;
+
+            // Primero pagar intereses pendientes
+            if ($total_pagado >= $interes_devengado) {
+                $excedente = $total_pagado - $interes_devengado;
+                // Pagar todo el interes, el resto al capital
+                $nuevo_capital = max(0, $capital_restante - $excedente);
+                $abonado_capital = $excedente;
+                $db->query("UPDATE loans SET total_amount = $nuevo_capital WHERE id=$loan_id_pay");
+                if ($nuevo_capital <= 0) {
+                    $db->query("UPDATE loans SET status='pagado' WHERE id=$loan_id_pay");
+                }
             }
-            if ($amount_paid < $total_due) throw new Exception("Monto insuficiente");
-            foreach ($installment_ids as $iid) {
-                $iid = intval($iid);
-                $db->query("UPDATE loan_installments SET status='pagada', paid_date='$fecha_pago', `paid_amount` = amount WHERE id=$iid");
-            }
-            $pending = $db->query("SELECT COUNT(*) as c FROM loan_installments WHERE loan_id=$loan_id_pay AND status='pendiente'")->fetch_assoc()['c'];
-            if ($pending == 0) $db->query("UPDATE loans SET status='pagado' WHERE id=$loan_id_pay");
         }
 
         $db->commit();
-        $_SESSION['success'] = 'Pago registrado exitosamente';
-        redirect('/modules/loans/history.php');
+        $_SESSION['success'] = 'Pago de ' . number_format($monto, 2) . ' registrado';
+        redirect("/modules/loans/collect.php?loan_id=$loan_id_pay");
     } catch (Exception $e) {
         $db->rollback();
         $_SESSION['error'] = 'Error: ' . $e->getMessage();
@@ -100,31 +85,165 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// ── GET: Mostrar pagina ──
 if ($loan_id > 0) {
     $loan = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif FROM loans l JOIN clients c ON c.id=l.client_id WHERE l.id=$loan_id AND $where")->fetch_assoc();
     if (!$loan) { $_SESSION['error'] = 'Préstamo no encontrado'; redirect('/modules/loans/history.php'); }
-    $installments = $db->query("SELECT * FROM loan_installments WHERE loan_id=$loan_id ORDER BY installment_number");
+    $pagos = $db->query("SELECT * FROM loan_payments WHERE loan_id=$loan_id ORDER BY payment_date, id");
+    $total_pagado = $db->query("SELECT COALESCE(SUM(amount),0) as t FROM loan_payments WHERE loan_id=$loan_id")->fetch_assoc()['t'];
+    $cuotas = $db->query("SELECT * FROM loan_installments WHERE loan_id=$loan_id ORDER BY installment_number");
+
+    // Calcular mora
+    $start = new DateTime($loan['start_date']);
+    $now = new DateTime();
+    $diff = $start->diff($now);
+    $mora = ($diff->y * 12) + $diff->m;
+    $mora += $diff->d > 15 ? 1 : 0;
+
+    $capital_restante = $loan['loan_type'] === 'mensual' ? $loan['total_amount'] : 0;
+    $interes_mensual = $loan['monthly_payment'];
+    $total_cuota = $loan['loan_type'] === 'mensual' ? $loan['amount'] + ($interes_mensual * $mora) : $loan['total_amount'];
 }
 
-$clients_with_loans = $db->query("SELECT DISTINCT c.id, c.name, c.cedula_rif FROM loans l JOIN clients c ON c.id=l.client_id WHERE $where AND l.status='activo' ORDER BY c.name");
-
-$page_title = 'Cobro de Cuotas';
+$page_title = 'Cobro de Préstamo';
 require_once '../../includes/header.php';
 ?>
-<div class="container-fluid">
-    <h4 class="mb-3">Cobro de Cuotas de Pr&eacute;stamo</h4>
 
-    <?php if (!$loan_id): ?>
+<div class="container-fluid">
+    <?php if ($loan_id > 0 && $loan): ?>
+    <!-- ── RESUMEN DEL PRESTAMO ── -->
+    <div class="card mb-3">
+        <div class="card-header"><strong><?= h($loan['client_name']) ?></strong> - Préstamo #<?= $loan['id'] ?></div>
+        <div class="card-body p-0">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Cliente</th>
+                        <th>Moneda</th>
+                        <th>Capital</th>
+                        <th>%</th>
+                        <th>Interés</th>
+                        <th>Inicio</th>
+                        <th>Tipo</th>
+                        <th>Mora</th>
+                        <th>Cuota</th>
+                        <th>Total</th>
+                        <th>Abono</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><?= $loan['id'] ?></td>
+                        <td><?= h($loan['client_name']) ?></td>
+                        <td><?= $loan['currency'] ?></td>
+                        <td><?= number_format($loan['amount'],2) ?></td>
+                        <td><?= intval($loan['interest_rate']) ?>%</td>
+                        <td><?= number_format($loan['total_interest'],2) ?></td>
+                        <td><?= date('d/m/Y', strtotime($loan['start_date'])) ?></td>
+                        <td><?= $loan['loan_type'] === 'mensual' ? 'Mensual' : 'Plazo' ?></td>
+                        <td><?= $loan['status'] === 'pagado' ? '-' : $mora ?></td>
+                        <td><?= number_format($total_cuota,2) ?></td>
+                        <td><strong><?= number_format($total_cuota,2) ?></strong></td>
+                        <td><?= $total_pagado > 0 ? number_format($total_pagado,2) : '-' ?></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ── CAPITAL RESTANTE ── -->
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <div class="card p-2 text-center">
+                <small>Capital Original</small>
+                <strong><?= number_format($loan['amount'],2) ?> <?= $loan['currency'] ?></strong>
+            </div>
+        </div>
+        <?php if ($loan['loan_type'] === 'mensual'): ?>
+        <div class="col-md-3">
+            <div class="card p-2 text-center">
+                <small>Interés Mensual</small>
+                <strong><?= number_format($interes_mensual,2) ?> <?= $loan['currency'] ?></strong>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-2 text-center">
+                <small>Capital Restante</small>
+                <strong><?= number_format($capital_restante,2) ?> <?= $loan['currency'] ?></strong>
+            </div>
+        </div>
+        <?php endif; ?>
+        <div class="col-md-3">
+            <div class="card p-2 text-center">
+                <small>Total Abonado</small>
+                <strong><?= number_format($total_pagado,2) ?> <?= $loan['currency'] ?></strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── HISTORIAL DE PAGOS ── -->
+    <div class="card mb-3">
+        <div class="card-header">Historial de Pagos</div>
+        <div class="card-body p-0">
+            <table class="table table-sm mb-0">
+                <thead><tr><th>#</th><th>Fecha Pago</th><th>Monto</th><th>Moneda</th><th>Total Abonado</th></tr></thead>
+                <tbody>
+                    <?php if ($pagos->num_rows === 0): ?>
+                    <tr><td colspan="5" class="text-center text-muted">Sin pagos registrados</td></tr>
+                    <?php endif; ?>
+                    <?php $acum = 0; while($p = $pagos->fetch_assoc()): $acum += $p['amount']; ?>
+                    <tr>
+                        <td><?= $p['id'] ?></td>
+                        <td><?= date('d/m/Y', strtotime($p['payment_date'])) ?></td>
+                        <td><?= number_format($p['amount'],2) ?></td>
+                        <td><?= $loan['currency'] ?></td>
+                        <td><?= number_format($acum,2) ?></td>
+                    </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ── FORMULARIO DE PAGO ── -->
+    <div class="card">
+        <div class="card-header">Registrar Pago</div>
+        <div class="card-body">
+            <form method="POST" class="row g-2">
+                <input type="hidden" name="loan_id" value="<?= $loan['id'] ?>">
+                <div class="col-md-4">
+                    <label class="form-label">Monto a Pagar</label>
+                    <input type="number" name="monto" class="form-control" step="0.01" min="0" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Fecha de Pago</label>
+                    <input type="date" name="fecha_pago" class="form-control" value="<?= date('Y-m-d') ?>">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Moneda</label>
+                    <input type="text" class="form-control" value="<?= $loan['currency'] ?>" readonly>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-circle"></i> Registrar Pago</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <?php else: ?>
+    <!-- ── SELECCIONAR PRESTAMO ── -->
     <div class="card">
         <div class="card-body">
             <form method="GET" class="row g-2">
                 <div class="col-md-8">
                     <select name="loan_id" class="form-select" required>
-                        <option value="">Seleccionar pr&eacute;stamo activo...</option>
-                        <?php while($l = $clients_with_loans->fetch_assoc()): 
-                            $loans_of = $db->query("SELECT * FROM loans WHERE client_id={$l['id']} AND status='activo' AND $where");
-                            while($lo = $loans_of->fetch_assoc()): ?>
-                        <option value="<?= $lo['id'] ?>"><?= h($l['name']) ?> - #<?= $lo['id'] ?> (<?= $lo['loan_type'] ?> - <?= number_format($lo['total_amount'],2) ?> <?= $lo['currency'] ?>)</option>
+                        <option value="">Seleccionar préstamo activo...</option>
+                        <?php $clients = $db->query("SELECT DISTINCT c.id, c.name FROM loans l JOIN clients c ON c.id=l.client_id WHERE $where AND l.status='activo' ORDER BY c.name"); ?>
+                        <?php while($c = $clients->fetch_assoc()): 
+                            $loans = $db->query("SELECT * FROM loans WHERE client_id={$c['id']} AND status='activo' AND $where");
+                            while($l = $loans->fetch_assoc()): ?>
+                        <option value="<?= $l['id'] ?>"><?= h($c['name']) ?> - #<?= $l['id'] ?> (<?= number_format($l['total_amount'],2) ?> <?= $l['currency'] ?>)</option>
                         <?php endwhile; endwhile; ?>
                     </select>
                 </div>
@@ -135,164 +254,5 @@ require_once '../../includes/header.php';
         </div>
     </div>
     <?php endif; ?>
-
-    <?php if (isset($loan) && $loan):
-        $cap_pagado = ($loan['loan_type'] === 'mensual') ? $loan['amount'] - ($loan['total_amount']) : 0;
-        $capital_restante = ($loan['loan_type'] === 'mensual') ? $loan['total_amount'] : 0;
-    ?>
-    <div class="card mb-3">
-        <div class="card-header">
-            <strong><?= h($loan['client_name']) ?></strong> - <?= h($loan['cedula_rif']) ?>
-            | Pr&eacute;stamo #<?= $loan['id'] ?>
-            <span class="badge bg-info ms-2"><?= $loan['loan_type'] ?></span>
-        </div>
-        <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-3"><strong>Capital Original:</strong> <?= number_format($loan['amount'],2) ?> <?= $loan['currency'] ?></div>
-                <?php if ($loan['loan_type'] === 'mensual'): ?>
-                <div class="col-md-3"><strong>Inter&eacute;s Mensual:</strong> <?= number_format($loan['monthly_payment'],2) ?> <?= $loan['currency'] ?></div>
-                <div class="col-md-3"><strong>Capital Restante:</strong> <span id="capital_restante"><?= number_format($capital_restante,2) ?></span> <?= $loan['currency'] ?></div>
-                <div class="col-md-3"><strong>Fecha Inicio:</strong> <?= date('d/m/Y', strtotime($loan['start_date'])) ?></div>
-                <?php else: ?>
-                <div class="col-md-3"><strong>Total:</strong> <?= number_format($loan['total_amount'],2) ?> <?= $loan['currency'] ?></div>
-                <div class="col-md-3"><strong>Cuota:</strong> <?= number_format($loan['monthly_payment'],2) ?> <?= $loan['currency'] ?></div>
-                <?php endif; ?>
-            </div>
-
-            <form method="POST">
-                <input type="hidden" name="loan_id" value="<?= $loan['id'] ?>">
-                <input type="hidden" name="capital_pagado" id="capital_pagado" value="<?= $cap_pagado ?>">
-                <input type="hidden" name="interes" id="interes_hidden" value="0">
-                <input type="hidden" name="a_capital" id="a_capital" value="0">
-
-                <div class="table-responsive mb-3">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th># Cuota</th>
-                                <th>Fecha Vencimiento</th>
-                                <th>Monto</th>
-                                <th>Abonado</th>
-                                <th>Resta</th>
-                                <th>Estado</th>
-                                <th>Fecha Pago</th>
-                                <th class="no-print">Acci&oacute;n</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php $total_pendiente = 0; ?>
-                            <?php while($inst = $installments->fetch_assoc()): 
-                                if ($inst['status'] === 'pendiente') $total_pendiente += $inst['amount'];
-                            ?>
-                            <tr class="<?= $inst['status']=='pagada'?'table-success':($inst['status']=='vencida'?'table-danger':'') ?>">
-                                <td><?= $inst['installment_number'] ?></td>
-                                <td><?= date('d/m/Y', strtotime($inst['due_date'])) ?></td>
-                                <td><?= number_format($inst['amount'],2) ?> <?= $loan['currency'] ?></td>
-                                <td><?= $inst['paid_amount'] > 0 ? number_format($inst['paid_amount'],2) . ' ' . $loan['currency'] : '-' ?></td>
-                                <td><?= number_format(max(0, $inst['amount'] - $inst['paid_amount']),2) ?> <?= $loan['currency'] ?></td>
-                                <td><span class="badge bg-<?= $inst['status']=='pagada'?'success':($inst['status']=='vencida'?'danger':'warning') ?>"><?= $inst['status'] ?></span></td>
-                                <td><?= $inst['paid_date'] ? date('d/m/Y', strtotime($inst['paid_date'])) : '-' ?></td>
-                                <td class="no-print">
-                                    <?php if ($inst['status'] === 'pagada' || $inst['paid_amount'] > 0): ?>
-                                    <a href="delete_inst.php?id=<?= $inst['id'] ?>&loan_id=<?= $loan['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar esta cuota? Se revertir\u00e1 el pago.')" title="Eliminar"><i class="bi bi-trash"></i></a>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-3">
-                        <label class="form-label">Monto a Pagar</label>
-                        <input type="number" name="amount_paid" id="amount_paid" class="form-control" step="0.01" min="0" value="<?= $total_pendiente ?>" required>
-                        <small class="text-muted">Inter&eacute;s: <span id="interes_display"><?= number_format($loan['monthly_payment'],2) ?></span> | A capital: <span id="a_capital_display">0.00</span></small>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Fecha de Pago</label>
-                        <input type="date" name="fecha_pago" class="form-control" value="<?= date('Y-m-d') ?>" min="<?= $loan['start_date'] ?>" max="<?= date('Y-m-d') ?>">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Moneda</label>
-                        <select name="currency" class="form-select">
-                            <option value="<?= $loan['currency'] ?>"><?= $loan['currency'] ?></option>
-                        </select>
-                    </div>
-                </div>
-
-                <?php if ($loan['loan_type'] === 'plazo'): ?>
-                <div class="mb-3">
-                    <label><input type="checkbox" id="selectAll" onchange="toggleAll(this)"> Seleccionar todas las cuotas pendientes</label>
-                </div>
-                <?php endif; ?>
-
-                <div class="d-flex gap-2">
-                    <button type="submit" name="action" value="normal" class="btn btn-success flex-fill"><i class="bi bi-check-circle"></i> Procesar Pago</button>
-                    <?php if ($loan['loan_type'] === 'mensual'): ?>
-                    <button type="button" class="btn btn-danger flex-fill" onclick="calcularCancelacion()"><i class="bi bi-x-circle"></i> Cancelar Totalidad</button>
-                    <?php endif; ?>
-                    <a href="history.php" class="btn btn-secondary flex-fill">Cancelar</a>
-                </div>
-
-                <?php if ($loan['loan_type'] === 'mensual'): ?>
-                <div id="cancelacion_info" style="display:none" class="card bg-light mt-3 p-3">
-                    <h5>Cancelar Totalidad del Pr&eacute;stamo</h5>
-                    <p>Capital restante: <strong id="cap_restante_txt">0.00</strong></p>
-                    <p>Inter&eacute;s por d&iacute;a: <strong id="interes_dia_txt">0.00</strong></p>
-                    <p>D&iacute;as transcurridos: <strong id="dias_txt">0</strong></p>
-                    <p>Inter&eacute;s devengado: <strong id="interes_dev_txt">0.00</strong></p>
-                    <p class="fs-5">Total a cancelar: <strong id="total_cancelar_txt" class="text-danger">0.00</strong></p>
-                    <button type="submit" name="action" value="cancelar_total" class="btn btn-danger btn-lg"><i class="bi bi-check-circle"></i> Confirmar Cancelaci&oacute;n Total</button>
-                </div>
-                <?php endif; ?>
-            </form>
-        </div>
-    </div>
-    <?php endif; ?>
 </div>
-<script>
-function toggleAll(source) {
-    document.querySelectorAll('.installment-check').forEach(cb => {
-        cb.checked = source.checked;
-        if (cb.checked) cb.dispatchEvent(new Event('change'));
-    });
-}
-
-document.getElementById('amount_paid').addEventListener('input', function() {
-    var total = parseFloat(this.value) || 0;
-    var interes = <?= $loan ? $loan['monthly_payment'] : 0 ?>;
-    var aCapital = Math.max(0, total - interes);
-    document.getElementById('interes_display').textContent = interes.toFixed(2);
-    document.getElementById('interes_hidden').value = Math.min(interes, total);
-    document.getElementById('a_capital').value = aCapital;
-    document.getElementById('a_capital_display').textContent = aCapital.toFixed(2);
-});
-
-function calcularCancelacion() {
-    var capital = <?= $capital_restante ?>;
-    var tasaInteres = <?= $loan ? ($loan['interest_rate'] / 100) : 0 ?>;
-    var fechaInicio = new Date('<?= $loan ? $loan['start_date'] : date('Y-m-d') ?>');
-    var hoy = new Date();
-    var dias = Math.max(1, Math.floor((hoy - fechaInicio) / (1000 * 60 * 60 * 24)));
-    var interesDiario = (capital * tasaInteres) / 30;
-    var interesDevengado = interesDiario * dias;
-    var totalCancelar = capital + interesDevengado;
-
-    document.getElementById('cap_restante_txt').textContent = capital.toFixed(2);
-    document.getElementById('interes_dia_txt').textContent = interesDiario.toFixed(4);
-    document.getElementById('dias_txt').textContent = dias;
-    document.getElementById('interes_dev_txt').textContent = interesDevengado.toFixed(2);
-    document.getElementById('total_cancelar_txt').textContent = totalCancelar.toFixed(2);
-    document.getElementById('amount_paid').value = totalCancelar.toFixed(2);
-    document.getElementById('cancelacion_info').style.display = 'block';
-    document.getElementById('amount_paid').dispatchEvent(new Event('input'));
-}
-
-// Trigger initial calculation
-setTimeout(function() {
-    var ap = document.getElementById('amount_paid');
-    if (ap) ap.dispatchEvent(new Event('input'));
-}, 100);
-</script>
 <?php require_once '../../includes/footer.php'; ?>
