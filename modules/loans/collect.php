@@ -108,8 +108,19 @@ if ($loan_id > 0) {
     if ($loan['loan_type'] === 'plazo') {
         $cuota_plazo = $loan['term_months'] > 0 ? $loan['total_amount'] / $loan['term_months'] : 0;
         $cuotas_pagadas = $cuota_plazo > 0 ? floor($total_pagado / $cuota_plazo) : 0;
-        $mora_plazo = max(0, $loan['term_months'] - $cuotas_pagadas);
+        $cuota_actual = $cuotas_pagadas + 1;
+        $fecha_venc = date('Y-m-d', strtotime($loan['start_date'] . " +$cuota_actual months"));
+        $hoy = new DateTime();
+        $venc = new DateTime($fecha_venc);
+        if ($hoy > $venc) {
+            $diff = $venc->diff($hoy);
+            $mora_plazo = ($diff->y * 12) + $diff->m;
+            $mora_plazo += $diff->d > 15 ? 1 : 0;
+        } else {
+            $mora_plazo = 0;
+        }
         $capital_restante = 0;
+        $cuotas_restantes = max(0, $loan['term_months'] - $cuotas_pagadas);
         $total_cuota = $cuota_plazo;
         $deuda_restante = max(0, $loan['total_amount'] - $total_pagado);
     } else {
@@ -162,7 +173,7 @@ require_once '../../includes/header.php';
                         <td><?php if ($loan['status'] === 'pagado'): ?>-<?php elseif ($loan['loan_type'] === 'plazo'): ?><?= $mora_plazo ?><?php else: ?><?= $mora ?><?php endif; ?></td>
                         <td><?= number_format($total_cuota,2) ?></td>
                         <td><strong><?= number_format($deuda_restante,2) ?></strong></td>
-                        <td><strong><?= $loan['loan_type'] === 'plazo' ? '-' : number_format($capital_restante,2) ?></strong></td>
+                        <td><strong><?= $loan['loan_type'] === 'plazo' ? $cuotas_restantes . ' cuotas' : number_format($capital_restante,2) ?></strong></td>
                         <td><?= $total_pagado > 0 ? number_format($total_pagado,2) : '-' ?></td>
                     </tr>
                     <?php if ($loan['loan_type'] === 'mensual' && $capital_restante > 0 && $capital_restante < $loan['amount']): ?>
