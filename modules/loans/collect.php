@@ -187,10 +187,10 @@ require_once '../../includes/header.php';
         <div class="card-header">Historial de Pagos</div>
         <div class="card-body p-0">
             <table class="table table-sm mb-0">
-                <thead><tr><th>#</th><th>Fecha Pago</th><th>Monto</th><th>Moneda</th><th>Total Abonado</th></tr></thead>
+                <thead><tr><th>#</th><th>Fecha Pago</th><th>Monto</th><th>Moneda</th><th>Total Abonado</th><th class="no-print">Acci&oacute;n</th></tr></thead>
                 <tbody>
                     <?php if ($pagos->num_rows === 0): ?>
-                    <tr><td colspan="5" class="text-center text-muted">Sin pagos registrados</td></tr>
+                    <tr><td colspan="6" class="text-center text-muted">Sin pagos registrados</td></tr>
                     <?php endif; ?>
                     <?php $acum = 0; while($p = $pagos->fetch_assoc()): $acum += $p['amount']; ?>
                     <tr>
@@ -199,6 +199,7 @@ require_once '../../includes/header.php';
                         <td><?= number_format($p['amount'],2) ?></td>
                         <td><?= $loan['currency'] ?></td>
                         <td><?= number_format($acum,2) ?></td>
+                        <td class="no-print"><a href="delete_pago.php?id=<?= $p['id'] ?>&loan_id=<?= $loan['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Eliminar este pago?')" title="Eliminar"><i class="bi bi-trash"></i></a></td>
                     </tr>
                     <?php endwhile; ?>
                 </tbody>
