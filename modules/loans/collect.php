@@ -176,7 +176,7 @@ require_once '../../includes/header.php';
                         <td><strong><?= $loan['loan_type'] === 'plazo' ? $cuotas_restantes . ' cuotas' : number_format($capital_restante,2) ?></strong></td>
                         <td><?= $total_pagado > 0 ? number_format($total_pagado,2) : '-' ?></td>
                     </tr>
-                    <?php if ($loan['loan_type'] === 'mensual' && $capital_restante > 0 && $capital_restante < $loan['amount']): ?>
+                    <?php if ($loan['loan_type'] === 'mensual' && $mora == 0 && $capital_restante > 0 && $capital_restante < $loan['amount']): ?>
                     <tr class="table-info">
                         <td><?= $loan['id'] ?>*</td>
                         <td><?= h($loan['client_name']) ?></td>
