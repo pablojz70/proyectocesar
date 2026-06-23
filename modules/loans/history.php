@@ -84,6 +84,7 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                             <th>%</th>
                             <th>Inicio</th>
                             <th>Tipo</th>
+                            <th>Mora</th>
                             <th>Deuda</th>
                             <th>Cap. Restante</th>
                             <th>Abono</th>
@@ -93,7 +94,7 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                     </thead>
                     <tbody>
                         <?php if ($loans->num_rows === 0): ?>
-                        <tr><td colspan="12" class="text-center py-4 text-muted">No hay pr&eacute;stamos registrados</td></tr>
+                        <tr><td colspan="13" class="text-center py-4 text-muted">No hay pr&eacute;stamos registrados</td></tr>
                         <?php endif; ?>
                         <?php while($l = $loans->fetch_assoc()): 
                             if ($l['loan_type'] === 'plazo') {
@@ -116,6 +117,7 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                             <td><?= intval($l['interest_rate']) ?>%</td>
                             <td><?= date('d/m/Y', strtotime($l['start_date'])) ?></td>
                             <td><?= $l['loan_type'] === 'mensual' ? 'Mensual' : $l['term_months'] . ' meses' ?></td>
+                            <td><?= $l['status'] === 'pagado' ? '-' : $mora ?></td>
                             <td><strong><?= $l['loan_type'] === 'mensual' ? number_format($l['amount'] + ($l['monthly_payment'] * ($mora > 0 ? $mora : 1)),2) : number_format($l['total_amount'],2) ?></strong></td>
                             <td><?php
                                 if ($l['loan_type'] === 'plazo') {
