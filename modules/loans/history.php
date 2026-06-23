@@ -114,21 +114,19 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                                 }
                                 $capital_restante_val = max(0, $l['term_months'] - $pc);
                             } else {
-                                // MesesDeuda segun ultimo pago
-                                $ult_pago = $db->query("SELECT MAX(payment_date) as f FROM loan_payments WHERE loan_id={$l['id']}")->fetch_assoc()['f'];
-                                $fecha_ref = $ult_pago ? new DateTime($ult_pago) : new DateTime($l['start_date']);
                                 $inicio = new DateTime($l['start_date']);
-                                $diff = $inicio->diff($fecha_ref);
-                                $meses_deuda = ($diff->y * 12) + $diff->m;
-                                $meses_deuda += $diff->d > 15 ? 1 : 0;
-                                $deuda_im = $l['monthly_payment'] * $meses_deuda;
-                                $mora = $meses_deuda;
+                                $hoy = new DateTime();
+                                $diff = $inicio->diff($hoy);
+                                $mora = ($diff->y * 12) + $diff->m;
+                                $mora += $diff->d > 15 ? 1 : 0;
+                                $deuda_im = $l['monthly_payment'] * $mora;
                                 if ($l['total_abonado'] <= $deuda_im) {
                                     $capital_restante_val = $l['amount'];
+                                    $interes_pagado = false;
                                 } else {
                                     $exc = $l['total_abonado'] - $deuda_im;
                                     $capital_restante_val = max(0, $l['amount'] - $exc);
-                                    $mora = 0;
+                                    $interes_pagado = true;
                                 }
                             }
                         ?>
@@ -160,8 +158,8 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                                     elseif ($cuotas_rest <= 0 || $l['total_abonado'] >= $l['total_amount']) $estado_mostrar = 'pagado';
                                     else $estado_mostrar = 'activo';
                                 } else {
-                                    if ($mora > 0) $estado_mostrar = 'vencido';
-                                    elseif ($capital_restante_val <= 0) $estado_mostrar = 'pagado';
+                                    if ($mora > 0 && !$interes_pagado) $estado_mostrar = 'vencido';
+                                    elseif ($capital_restante_val <= 0 && $interes_pagado) $estado_mostrar = 'pagado';
                                     else $estado_mostrar = 'activo';
                                 }
                                 ?>
