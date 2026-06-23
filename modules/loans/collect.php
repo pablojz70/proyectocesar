@@ -27,7 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         if ($loan['loan_type'] === 'plazo') {
             // PLAZO: sumar al abono, si cubre cuota(s), descontar
-            $db->query("INSERT INTO loan_payments (loan_id, amount, payment_date) VALUES ($loan_id_pay, $monto, '$fecha')");
+            $r = $db->query("INSERT INTO loan_payments (loan_id, amount, payment_date) VALUES ($loan_id_pay, $monto, '$fecha')");
+            if (!$r) throw new Exception("Error al registrar pago: " . $db->error);
             $total_pagado = $db->query("SELECT COALESCE(SUM(amount),0) as t FROM loan_payments WHERE loan_id=$loan_id_pay")->fetch_assoc()['t'];
 
             // Marcar cuotas pagadas segun el total abonado
@@ -45,7 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         } else {
             // MENSUAL: acumular abonos
-            $db->query("INSERT INTO loan_payments (loan_id, amount, payment_date) VALUES ($loan_id_pay, $monto, '$fecha')");
+            $r = $db->query("INSERT INTO loan_payments (loan_id, amount, payment_date) VALUES ($loan_id_pay, $monto, '$fecha')");
+            if (!$r) throw new Exception("Error al registrar pago: " . $db->error);
             $total_pagado = $db->query("SELECT COALESCE(SUM(amount),0) as t FROM loan_payments WHERE loan_id=$loan_id_pay")->fetch_assoc()['t'];
 
             $interes_mensual = $loan['monthly_payment'];
