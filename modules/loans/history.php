@@ -19,7 +19,8 @@ if ($fecha_desde) $where .= " AND DATE(l.created_at) >= '$fecha_desde'";
 if ($fecha_hasta) $where .= " AND DATE(l.created_at) <= '$fecha_hasta'";
 
 $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
-    COALESCE((SELECT SUM(amount) FROM loan_payments WHERE loan_id=l.id),0) as total_abonado
+    COALESCE((SELECT SUM(amount) FROM loan_payments WHERE loan_id=l.id),0) as total_abonado,
+    (SELECT MAX(payment_date) FROM loan_payments WHERE loan_id=l.id) as ultimo_pago
     FROM loans l
     JOIN clients c ON c.id=l.client_id
     WHERE $where
@@ -114,16 +115,20 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                                 }
                                 $capital_restante_val = max(0, $l['term_months'] - $pc);
                             } else {
-                                $start = new DateTime($l['start_date']);
-                                $now = new DateTime();
-                                $diff = $start->diff($now);
-                                $meses_total = ($diff->y * 12) + $diff->m;
-                                $meses_total += $diff->d > 15 ? 1 : 0;
-                                $meses_pagados = $l['monthly_payment'] > 0 ? floor($l['total_abonado'] / $l['monthly_payment']) : 0;
-                                $mora = max(0, $meses_total - $meses_pagados);
-                                $a_pagar = $l['monthly_payment'] * ($mora > 0 ? $mora : 1);
-                                $exc = max(0, $l['total_abonado'] - $a_pagar);
-                                $capital_restante_val = max(0, $l['amount'] - $exc);
+                                $ult_pago = $l['ultimo_pago'] ? new DateTime($l['ultimo_pago']) : new DateTime($l['start_date']);
+                                $inicio = new DateTime($l['start_date']);
+                                $diff = $inicio->diff($ult_pago);
+                                $meses_deuda = ($diff->y * 12) + $diff->m;
+                                $meses_deuda += $diff->d > 15 ? 1 : 0;
+                                $deuda_im = $l['monthly_payment'] * $meses_deuda;
+                                if ($l['total_abonado'] <= $deuda_im) {
+                                    $mora = $meses_deuda;
+                                    $capital_restante_val = $l['amount'];
+                                } else {
+                                    $mora = 0;
+                                    $exc = $l['total_abonado'] - $deuda_im;
+                                    $capital_restante_val = max(0, $l['amount'] - $exc);
+                                }
                             }
                         ?>
                         <tr>
@@ -135,14 +140,12 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                             <td><?= date('d/m/Y', strtotime($l['start_date'])) ?></td>
                             <td><?= $l['loan_type'] === 'mensual' ? 'Mensual' : $l['term_months'] . ' meses' ?></td>
                             <td><?= $l['status'] === 'pagado' ? '-' : $mora ?></td>
-                            <td><strong><?= $l['loan_type'] === 'mensual' ? number_format(max(0, $l['amount'] + ($l['monthly_payment'] * ($mora > 0 ? $mora : 1)) - $l['total_abonado']),2) : number_format(max(0, $l['total_amount'] - $l['total_abonado']),2) ?></strong></td>
+                            <td><strong><?= $l['loan_type'] === 'mensual' ? number_format(max(0, $l['amount'] + ($l['monthly_payment'] * $meses_deuda) - $l['total_abonado']),2) : number_format(max(0, $l['total_amount'] - $l['total_abonado']),2) ?></strong></td>
                             <td><?php
                                 if ($l['loan_type'] === 'plazo') {
                                     echo $capital_restante_val . ' cuotas';
                                 } else {
-                                    $a_pagar = $l['monthly_payment'] * ($mora > 0 ? $mora : 1);
-                                    $exc = max(0, $l['total_abonado'] - $a_pagar);
-                                    echo number_format(max(0, $l['amount'] - $exc),2);
+                                    echo number_format($capital_restante_val,2);
                                 }
                             ?></td>
                             <td><?= $l['total_abonado'] > 0 ? number_format($l['total_abonado'],2) : '-' ?></td>
