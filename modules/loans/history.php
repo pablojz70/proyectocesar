@@ -82,12 +82,10 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                             <th>Moneda</th>
                             <th>Capital</th>
                             <th>%</th>
-                            <th>Inter&eacute;s</th>
                             <th>Inicio</th>
                             <th>Tipo</th>
-                            <th>Mora</th>
-                            <th>Cuota</th>
-                            <th>Total</th>
+                            <th>Deuda</th>
+                            <th>Cap. Restante</th>
                             <th>Abono</th>
                             <th>Estado</th>
                             <th class="no-print">Acciones</th>
@@ -95,7 +93,7 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                     </thead>
                     <tbody>
                         <?php if ($loans->num_rows === 0): ?>
-                        <tr><td colspan="14" class="text-center py-4 text-muted">No hay pr&eacute;stamos registrados</td></tr>
+                        <tr><td colspan="12" class="text-center py-4 text-muted">No hay pr&eacute;stamos registrados</td></tr>
                         <?php endif; ?>
                         <?php while($l = $loans->fetch_assoc()): 
                             if ($l['loan_type'] === 'plazo') {
@@ -114,12 +112,10 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                             <td><?= $l['currency'] ?></td>
                             <td><?= number_format($l['amount'],2) ?></td>
                             <td><?= intval($l['interest_rate']) ?>%</td>
-                            <td><?= number_format($l['total_interest'],2) ?></td>
                             <td><?= date('d/m/Y', strtotime($l['start_date'])) ?></td>
                             <td><?= $l['loan_type'] === 'mensual' ? 'Mensual' : $l['term_months'] . ' meses' ?></td>
-                            <td><?= $l['status'] === 'pagado' ? '-' : $mora ?></td>
-                            <td><?= $l['loan_type'] === 'mensual' ? number_format($l['amount'] + ($l['monthly_payment'] * ($mora > 0 ? $mora : 1)),2) : number_format($l['monthly_payment'],2) ?></td>
-                            <td><strong><?= $l['loan_type'] === 'mensual' ? number_format($l['amount'] + ($l['monthly_payment'] * $mora),2) : number_format($l['total_amount'],2) ?></strong></td>
+                            <td><strong><?= $l['loan_type'] === 'mensual' ? number_format($l['amount'] + ($l['monthly_payment'] * ($mora > 0 ? $mora : 1)),2) : number_format($l['total_amount'],2) ?></strong></td>
+                            <td><?= $l['loan_type'] === 'mensual' ? number_format($l['total_amount'],2) : '-' ?></td>
                             <td><?= $l['total_abonado'] > 0 ? number_format($l['total_abonado'],2) : '-' ?></td>
                             <td>
                                 <span class="badge bg-<?= $l['status']=='activo'?'warning':($l['status']=='pagado'?'success':'danger') ?>">
