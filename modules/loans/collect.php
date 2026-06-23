@@ -103,8 +103,6 @@ if ($loan_id > 0) {
     $meses_total += $diff->d > 15 ? 1 : 0;
 
     $interes_mensual = $loan['monthly_payment'];
-    $meses_pagados = $interes_mensual > 0 ? floor($total_pagado / $interes_mensual) : 0;
-    $mora = max(0, $meses_total - $meses_pagados);
     if ($loan['loan_type'] === 'plazo') {
         $cuota_plazo = $loan['term_months'] > 0 ? $loan['total_amount'] / $loan['term_months'] : 0;
         $cuotas_pagadas = $cuota_plazo > 0 ? floor($total_pagado / $cuota_plazo) : 0;
@@ -123,12 +121,29 @@ if ($loan_id > 0) {
         $cuotas_restantes = max(0, $loan['term_months'] - $cuotas_pagadas);
         $total_cuota = $cuota_plazo;
         $deuda_restante = max(0, $loan['total_amount'] - $total_pagado);
+        $mora = 0;
     } else {
-        $a_pagar = $interes_mensual * ($mora > 0 ? $mora : 1);
-        $exc = max(0, $total_pagado - $a_pagar);
-        $capital_restante = max(0, $loan['amount'] - $exc);
-        $total_cuota = $loan['amount'] + ($interes_mensual * $mora);
-        $deuda_restante = max(0, $loan['amount'] + ($interes_mensual * $mora) - $total_pagado);
+        // Obtener fecha del ultimo pago
+        $ult_pago = $db->query("SELECT MAX(payment_date) as f FROM loan_payments WHERE loan_id=$loan_id")->fetch_assoc()['f'];
+        $fecha_ref = $ult_pago ? new DateTime($ult_pago) : new DateTime($loan['start_date']);
+        $inicio = new DateTime($loan['start_date']);
+        $diff = $inicio->diff($fecha_ref);
+        $meses_deuda = ($diff->y * 12) + $diff->m;
+        $meses_deuda += $diff->d > 15 ? 1 : 0;
+
+        $deuda_im = $interes_mensual * $meses_deuda;
+        $mora = $meses_deuda;
+
+        if ($total_pagado <= $deuda_im) {
+            $capital_restante = $loan['amount'];
+            $deuda_restante = max(0, $loan['amount'] + $deuda_im - $total_pagado);
+        } else {
+            $exc = $total_pagado - $deuda_im;
+            $capital_restante = max(0, $loan['amount'] - $exc);
+            $deuda_restante = $capital_restante;
+            $mora = 0;
+        }
+        $total_cuota = $loan['amount'] + ($interes_mensual * $meses_deuda);
     }
 }
 
