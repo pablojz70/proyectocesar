@@ -102,7 +102,7 @@ if ($loan_id > 0) {
     $mora = ($diff->y * 12) + $diff->m;
     $mora += $diff->d > 15 ? 1 : 0;
 
-    $capital_restante = $total_cuota - $total_pagado;
+    $capital_restante = $total_cuota;
     $interes_mensual = $loan['monthly_payment'];
     $total_cuota = $loan['loan_type'] === 'mensual' ? $loan['amount'] + ($interes_mensual * $mora) : $loan['total_amount'];
 }
