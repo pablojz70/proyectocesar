@@ -141,7 +141,7 @@ require_once '../../includes/header.php';
                         <th>Tipo</th>
                         <th>Mora</th>
                         <th>Cuota</th>
-                        <th>Total</th>
+                        <th>Deuda</th>
                         <th>Abono</th>
                     </tr>
                 </thead>
