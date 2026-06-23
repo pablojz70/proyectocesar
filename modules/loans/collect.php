@@ -102,7 +102,18 @@ if ($loan_id > 0) {
     $mora = ($diff->y * 12) + $diff->m;
     $mora += $diff->d > 15 ? 1 : 0;
 
-    $capital_restante = $total_cuota;
+    $capital_restante = $loan['amount'];
+    if ($mora == 0) {
+        $start_date = new DateTime($loan['start_date']);
+        $today = new DateTime();
+        if ($start_date->format('Y-m-d') !== $today->format('Y-m-d')) {
+            $dias = $start_date->diff($today)->days;
+            $interes_diario = ($loan['amount'] * $loan['interest_rate'] / 100) / 30;
+            $capital_restante = $loan['amount'] + ($interes_diario * $dias);
+        }
+    } else {
+        $capital_restante = $loan['amount'] + ($interes_mensual * $mora);
+    }
     $interes_mensual = $loan['monthly_payment'];
     $total_cuota = $loan['loan_type'] === 'mensual' ? $loan['amount'] + ($interes_mensual * $mora) : $loan['total_amount'];
 }
