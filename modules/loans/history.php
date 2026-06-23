@@ -121,10 +121,9 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                             <td><strong><?= $l['loan_type'] === 'mensual' ? number_format($l['amount'] + ($l['monthly_payment'] * ($mora > 0 ? $mora : 1)),2) : number_format($l['total_amount'],2) ?></strong></td>
                             <td><?php
                                 if ($l['loan_type'] === 'plazo') {
-                                    $cuota_plazo = $l['term_months'] > 0 ? $l['total_amount'] / $l['term_months'] : 0;
-                                    $pagadas = $cuota_plazo > 0 ? floor($l['total_abonado'] / $cuota_plazo) : 0;
-                                    $restantes = max(0, $l['term_months'] - $pagadas);
-                                    echo $l['term_months'] . ' meses - ' . $restantes . ' cuotas';
+                                    $cuota_p = $l['term_months'] > 0 ? $l['total_amount'] / $l['term_months'] : 0;
+                                    $pagadas = $cuota_p > 0 ? floor($l['total_abonado'] / $cuota_p) : 0;
+                                    echo ($l['term_months'] - $pagadas) . ' # Cuotas';
                                 } else {
                                     $a_pagar = $l['monthly_payment'] * ($mora > 0 ? $mora : 1);
                                     $exc = max(0, $l['total_abonado'] - $a_pagar);
