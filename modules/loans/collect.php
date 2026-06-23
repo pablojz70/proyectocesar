@@ -135,7 +135,7 @@ require_once '../../includes/header.php';
                         <th>Capital</th>
                         <th>%</th>
                         <th>Interés</th>
-                        <th>Inicio</th>
+                        <th>Fecha</th>
                         <th>Tipo</th>
                         <th>Mora</th>
                         <th>Cuota</th>
@@ -168,7 +168,7 @@ require_once '../../includes/header.php';
                         <td><?= number_format($capital_restante,2) ?></td>
                         <td><?= intval($loan['interest_rate']) ?>%</td>
                         <td><?= number_format($capital_restante * $loan['interest_rate'] / 100,2) ?></td>
-                        <td><?= date('d/m/Y') ?></td>
+                        <td><?= date('d/m/Y', strtotime('+1 month', strtotime($loan['start_date']))) ?></td>
                         <td><?= $loan['loan_type'] === 'mensual' ? 'Mensual' : 'Plazo' ?></td>
                         <td><?= $loan['status'] === 'pagado' ? '-' : $mora ?></td>
                         <td><?= number_format($capital_restante + ($capital_restante * $loan['interest_rate'] / 100 * ($mora > 0 ? $mora : 1)),2) ?></td>
