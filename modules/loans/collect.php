@@ -128,7 +128,7 @@ if ($loan_id > 0) {
         $exc = max(0, $total_pagado - $a_pagar);
         $capital_restante = max(0, $loan['amount'] - $exc);
         $total_cuota = $loan['amount'] + ($interes_mensual * $mora);
-        $deuda_restante = max(0, $loan['amount'] + $loan['total_interest'] - $total_pagado);
+        $deuda_restante = max(0, $loan['amount'] + ($interes_mensual * $mora) - $total_pagado);
     }
 }
 
