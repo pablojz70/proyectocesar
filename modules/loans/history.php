@@ -130,7 +130,7 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                             <td><?= date('d/m/Y', strtotime($l['start_date'])) ?></td>
                             <td><?= $l['loan_type'] === 'mensual' ? 'Mensual' : $l['term_months'] . ' meses' ?></td>
                             <td><?= $l['status'] === 'pagado' ? '-' : $mora ?></td>
-                            <td><strong><?= $l['loan_type'] === 'mensual' ? number_format($l['amount'] + ($l['monthly_payment'] * ($mora > 0 ? $mora : 1)),2) : number_format($l['total_amount'],2) ?></strong></td>
+                            <td><strong><?= $l['loan_type'] === 'mensual' ? number_format($l['amount'] + ($l['monthly_payment'] * ($mora > 0 ? $mora : 1)),2) : number_format(max(0, $l['total_amount'] - $l['total_abonado']),2) ?></strong></td>
                             <td><?php
                                 if ($l['loan_type'] === 'plazo') {
                                     $cv = $l['term_months'] > 0 ? $l['total_amount'] / $l['term_months'] : 0;
