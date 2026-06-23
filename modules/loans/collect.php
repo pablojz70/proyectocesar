@@ -113,7 +113,7 @@ if ($loan_id > 0) {
         $capital_restante = max(0, $loan['amount'] - $exc);
     }
     $total_cuota = $loan['loan_type'] === 'mensual' ? $loan['amount'] + ($interes_mensual * $mora) : $loan['total_amount'];
-    $deuda_restante = max(0, $total_cuota - $total_pagado);
+    $deuda_restante = max(0, $loan['amount'] + $loan['total_interest'] - $total_pagado);
 }
 
 $page_title = 'Cobro de Préstamo';
