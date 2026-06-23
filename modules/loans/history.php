@@ -19,8 +19,7 @@ if ($fecha_desde) $where .= " AND DATE(l.created_at) >= '$fecha_desde'";
 if ($fecha_hasta) $where .= " AND DATE(l.created_at) <= '$fecha_hasta'";
 
 $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
-    COALESCE((SELECT SUM(amount) FROM loan_payments WHERE loan_id=l.id),0) as total_abonado,
-    (SELECT MAX(payment_date) FROM loan_payments WHERE loan_id=l.id) as ultimo_pago
+    COALESCE((SELECT SUM(amount) FROM loan_payments WHERE loan_id=l.id),0) as total_abonado
     FROM loans l
     JOIN clients c ON c.id=l.client_id
     WHERE $where
@@ -115,19 +114,21 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                                 }
                                 $capital_restante_val = max(0, $l['term_months'] - $pc);
                             } else {
-                                $ult_pago = $l['ultimo_pago'] ? new DateTime($l['ultimo_pago']) : new DateTime($l['start_date']);
+                                // MesesDeuda segun ultimo pago
+                                $ult_pago = $db->query("SELECT MAX(payment_date) as f FROM loan_payments WHERE loan_id={$l['id']}")->fetch_assoc()['f'];
+                                $fecha_ref = $ult_pago ? new DateTime($ult_pago) : new DateTime($l['start_date']);
                                 $inicio = new DateTime($l['start_date']);
-                                $diff = $inicio->diff($ult_pago);
+                                $diff = $inicio->diff($fecha_ref);
                                 $meses_deuda = ($diff->y * 12) + $diff->m;
                                 $meses_deuda += $diff->d > 15 ? 1 : 0;
                                 $deuda_im = $l['monthly_payment'] * $meses_deuda;
+                                $mora = $meses_deuda;
                                 if ($l['total_abonado'] <= $deuda_im) {
-                                    $mora = $meses_deuda;
                                     $capital_restante_val = $l['amount'];
                                 } else {
-                                    $mora = 0;
                                     $exc = $l['total_abonado'] - $deuda_im;
                                     $capital_restante_val = max(0, $l['amount'] - $exc);
+                                    $mora = 0;
                                 }
                             }
                         ?>
@@ -140,7 +141,7 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                             <td><?= date('d/m/Y', strtotime($l['start_date'])) ?></td>
                             <td><?= $l['loan_type'] === 'mensual' ? 'Mensual' : $l['term_months'] . ' meses' ?></td>
                             <td><?= $l['status'] === 'pagado' ? '-' : $mora ?></td>
-                            <td><strong><?= $l['loan_type'] === 'mensual' ? number_format(max(0, $l['amount'] + ($l['monthly_payment'] * $meses_deuda) - $l['total_abonado']),2) : number_format(max(0, $l['total_amount'] - $l['total_abonado']),2) ?></strong></td>
+                            <td><strong><?= $l['loan_type'] === 'mensual' ? number_format(max(0, $l['amount'] + ($l['monthly_payment'] * ($mora > 0 ? $mora : 1)) - $l['total_abonado']),2) : number_format(max(0, $l['total_amount'] - $l['total_abonado']),2) ?></strong></td>
                             <td><?php
                                 if ($l['loan_type'] === 'plazo') {
                                     echo $capital_restante_val . ' cuotas';
