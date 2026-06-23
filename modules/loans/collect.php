@@ -172,7 +172,7 @@ require_once '../../includes/header.php';
                         <td><?= $loan['loan_type'] === 'mensual' ? 'Mensual' : 'Plazo' ?></td>
                         <td><?= $loan['status'] === 'pagado' ? '-' : $mora ?></td>
                         <td><?= number_format($capital_restante + ($capital_restante * $loan['interest_rate'] / 100 * ($mora > 0 ? $mora : 1)),2) ?></td>
-                        <td><strong><?= number_format(max(0, $capital_restante + ($capital_restante * $loan['interest_rate'] / 100 * ($mora > 0 ? $mora : 1)) - $total_pagado),2) ?></strong></td>
+                        <td><?= number_format($capital_restante + ($capital_restante * $loan['interest_rate'] / 100 * ($mora > 0 ? $mora : 1)),2) ?></td>
                         <td><strong><?= number_format($capital_restante,2) ?></strong></td>
                         <td><?= $total_pagado > 0 ? number_format($total_pagado,2) : '-' ?></td>
                     </tr>
