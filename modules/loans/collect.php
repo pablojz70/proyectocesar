@@ -142,6 +142,7 @@ require_once '../../includes/header.php';
                         <th>Mora</th>
                         <th>Cuota</th>
                         <th>Deuda</th>
+                        <th>Cap. Restante</th>
                         <th>Abono</th>
                     </tr>
                 </thead>
@@ -158,6 +159,7 @@ require_once '../../includes/header.php';
                         <td><?= $loan['status'] === 'pagado' ? '-' : $mora ?></td>
                         <td><?= number_format($total_cuota,2) ?></td>
                         <td><strong><?= number_format($total_cuota,2) ?></strong></td>
+                        <td><strong><?= number_format($capital_restante,2) ?></strong></td>
                         <td><?= $total_pagado > 0 ? number_format($total_pagado,2) : '-' ?></td>
                     </tr>
                 </tbody>
