@@ -227,7 +227,7 @@ require_once '../../includes/header.php';
     <div class="card">
         <div class="card-header">Registrar Pago</div>
         <div class="card-body">
-            <form method="POST" class="row g-2">
+            <form method="POST" class="row g-2" onsubmit="this.querySelector('button[type=submit]').disabled=true">
                 <input type="hidden" name="loan_id" value="<?= $loan['id'] ?>">
                 <div class="col-md-4">
                     <label class="form-label">Monto a Pagar</label>
