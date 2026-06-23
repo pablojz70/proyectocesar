@@ -95,14 +95,16 @@ if ($loan_id > 0) {
     $total_pagado = $db->query("SELECT COALESCE(SUM(amount),0) as t FROM loan_payments WHERE loan_id=$loan_id")->fetch_assoc()['t'];
     $cuotas = $db->query("SELECT * FROM loan_installments WHERE loan_id=$loan_id ORDER BY installment_number");
 
-    // Calcular mora
+    // Calcular mora real (meses desde inicio menos meses pagados)
     $start = new DateTime($loan['start_date']);
     $now = new DateTime();
     $diff = $start->diff($now);
-    $mora = ($diff->y * 12) + $diff->m;
-    $mora += $diff->d > 15 ? 1 : 0;
+    $meses_total = ($diff->y * 12) + $diff->m;
+    $meses_total += $diff->d > 15 ? 1 : 0;
 
     $interes_mensual = $loan['monthly_payment'];
+    $meses_pagados = $interes_mensual > 0 ? floor($total_pagado / $interes_mensual) : 0;
+    $mora = max(0, $meses_total - $meses_pagados);
     if ($loan['loan_type'] === 'plazo') {
         $capital_restante = max(0, $loan['total_amount'] - $total_pagado);
     } else {
