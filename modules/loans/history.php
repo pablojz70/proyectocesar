@@ -19,7 +19,7 @@ if ($fecha_desde) $where .= " AND DATE(l.created_at) >= '$fecha_desde'";
 if ($fecha_hasta) $where .= " AND DATE(l.created_at) <= '$fecha_hasta'";
 
 $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
-    COALESCE((SELECT SUM(paid_amount) FROM loan_installments WHERE loan_id=l.id),0) as total_abonado
+    COALESCE((SELECT SUM(amount) FROM loan_payments WHERE loan_id=l.id),0) as total_abonado
     FROM loans l
     JOIN clients c ON c.id=l.client_id
     WHERE $where
