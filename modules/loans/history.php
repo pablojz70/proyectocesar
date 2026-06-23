@@ -98,12 +98,14 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                         <tr><td colspan="14" class="text-center py-4 text-muted">No hay pr&eacute;stamos registrados</td></tr>
                         <?php endif; ?>
                         <?php while($l = $loans->fetch_assoc()): 
-                            $start = new DateTime($l['start_date']);
-                            $now = new DateTime();
-                            $diff = $start->diff($now);
-                            $mora = ($diff->y * 12) + $diff->m;
-                            if ($l['loan_type'] === 'mensual' && $l['status'] === 'activo') {
-                                $mora += $diff->d > 15 ? 1 : 0;
+                            if ($l['loan_type'] === 'plazo') {
+                                $mora = $l['term_months'];
+                            } else {
+                                $start = new DateTime($l['start_date']);
+                                $now = new DateTime();
+                                $diff = $start->diff($now);
+                                $mora = ($diff->y * 12) + $diff->m;
+                                if ($l['status'] === 'activo') $mora += $diff->d > 15 ? 1 : 0;
                             }
                         ?>
                         <tr>
