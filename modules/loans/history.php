@@ -98,7 +98,19 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                         <?php endif; ?>
                         <?php while($l = $loans->fetch_assoc()): 
                             if ($l['loan_type'] === 'plazo') {
-                                $mora = $l['term_months'];
+                                $cv = $l['term_months'] > 0 ? $l['total_amount'] / $l['term_months'] : 0;
+                                $pc = $cv > 0 ? floor($l['total_abonado'] / $cv) : 0;
+                                $cuota_actual = $pc + 1;
+                                $fecha_venc = date('Y-m-d', strtotime($l['start_date'] . " +$cuota_actual months"));
+                                $hoy = new DateTime();
+                                $venc = new DateTime($fecha_venc);
+                                if ($hoy > $venc) {
+                                    $diff = $venc->diff($hoy);
+                                    $mora = ($diff->y * 12) + $diff->m;
+                                    $mora += $diff->d > 15 ? 1 : 0;
+                                } else {
+                                    $mora = 0;
+                                }
                             } else {
                                 $start = new DateTime($l['start_date']);
                                 $now = new DateTime();
