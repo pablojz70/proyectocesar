@@ -109,8 +109,8 @@ if ($loan_id > 0) {
     $mora_total += $diff->d > 15 ? 1 : 0;
 
     $interes_mensual = $loan['monthly_payment'];
-    $meses_pagados = $interes_mensual > 0 ? floor($total_pagado / $interes_mensual) : 0;
-    $mora = max(0, $mora_total - $meses_pagados);
+    $meses_pagados = 0;
+    $mora = $mora_total;
     if ($loan['loan_type'] === 'plazo') {
         $cuota_plazo = $loan['term_months'] > 0 ? $loan['total_amount'] / $loan['term_months'] : 0;
         $cuotas_pagadas = $cuota_plazo > 0 ? floor($total_pagado / $cuota_plazo) : 0;
@@ -155,6 +155,7 @@ if ($loan_id > 0) {
             $interes_pagado = true;
         }
         $total_cuota = $loan['amount'] + ($interes_mensual * $mora_total);
+        $mora = max(0, $mora_total - $meses_pagados);
     }
 }
 
