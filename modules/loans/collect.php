@@ -113,10 +113,18 @@ if ($loan_id > 0) {
         }
         $mora = max(0, $mora_total - $meses_pagados);
 
-        // Interes devengado desde inicio hasta hoy
-        $dias_desde_ini = $inicio->diff($hoy)->days;
-        $interes_diario = ($loan['amount'] * $loan['interest_rate'] / 100) / 30;
-        $interes_devengado = $interes_diario * $dias_desde_ini;
+        // Obtener el maximo MoraP de todos los pagos
+        $max_mora_p = 0;
+        $p_mora = $db->query("SELECT payment_date FROM loan_payments WHERE loan_id=$loan_id ORDER BY payment_date DESC LIMIT 1");
+        if ($pm = $p_mora->fetch_assoc()) {
+            $fecha_ult_pago = new DateTime($pm['payment_date']);
+            $inicio_p = new DateTime($loan['start_date']);
+            $diff = $inicio_p->diff($fecha_ult_pago);
+            $max_mora_p = ($diff->y * 12) + $diff->m;
+            if ($diff->d > 15) $max_mora_p++;
+        }
+
+        $interes_por_mora = $interes_mensual * $max_mora_p;
 
         // Deuda = Capital + Interes mensual x Mora (no por dias)
         $deuda_bruta = $loan['amount'] + ($interes_mensual * $mora_total);
@@ -125,12 +133,12 @@ if ($loan_id > 0) {
             $capital_restante = $loan['amount'];
             $deuda_restante = $deuda_bruta;
             $interes_pagado = false;
-        } elseif ($total_pagado <= $interes_devengado) {
+        } elseif ($total_pagado <= $interes_por_mora) {
             $capital_restante = $loan['amount'];
             $deuda_restante = max(0, $deuda_bruta - $total_pagado);
             $interes_pagado = false;
         } else {
-            $exc = $total_pagado - $interes_devengado;
+            $exc = $total_pagado - $interes_por_mora;
             $capital_restante = max(0, $loan['amount'] - $exc);
             $deuda_restante = $capital_restante;
             $interes_pagado = true;
