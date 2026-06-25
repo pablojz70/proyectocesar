@@ -190,6 +190,18 @@ require_once '../../includes/header.php';
                         } else {
                             $nueva_fecha = date('d/m/Y', strtotime($loan['start_date']));
                         }
+                        // Mora fila2 = Mora fila1 - MoraP del ultimo pago
+                        $mora_f2 = $mora;
+                        if ($ult_pago_f) {
+                            $ant_fecha = $db->query("SELECT payment_date FROM loan_payments WHERE loan_id=$loan_id AND payment_date < '$ult_pago_f' ORDER BY payment_date DESC LIMIT 1")->fetch_assoc();
+                            $base = $ant_fecha ? $ant_fecha['payment_date'] : $loan['start_date'];
+                            $d = new DateTime($base);
+                            $h = new DateTime($ult_pago_f);
+                            $df = $d->diff($h);
+                            $mp = ($df->y * 12) + $df->m;
+                            if ($df->d > 15) $mp++;
+                            $mora_f2 = max(0, $mora - $mp);
+                        }
                     ?>
                     <tr class="table-info">
                         <td><?= $loan['id'] ?>*</td>
@@ -200,7 +212,7 @@ require_once '../../includes/header.php';
                         <td><?= number_format($nuevo_interes,2) ?></td>
                         <td><?= $nueva_fecha ?></td>
                         <td>Mensual</td>
-                        <td><?= $mora ?></td>
+                        <td><?= $mora_f2 ?></td>
                         <td><?= number_format($capital_restante + ($nuevo_interes * $mora),2) ?></td>
                         <td><?= number_format($capital_restante + ($nuevo_interes * $mora),2) ?></td>
                         <td><strong><?= number_format($capital_restante,2) ?></strong></td>
