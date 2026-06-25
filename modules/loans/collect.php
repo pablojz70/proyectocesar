@@ -222,11 +222,14 @@ require_once '../../includes/header.php';
                     <?php if ($pagos->num_rows === 0): ?>
                     <tr><td colspan="7" class="text-center text-muted">Sin pagos registrados</td></tr>
                     <?php endif; ?>
-                    <?php $inicio_dt = new DateTime($loan['start_date']); $acum = 0; while($p = $pagos->fetch_assoc()): $acum += $p['amount']; 
-                        $pago_dt = new DateTime($p['payment_date']);
-                        $diff = $inicio_dt->diff($pago_dt);
+                    <?php $ult_fecha_mora = $loan['start_date']; $acum = 0; while($p = $pagos->fetch_assoc()): $acum += $p['amount']; 
+                        $desde = new DateTime($ult_fecha_mora);
+                        $hasta = new DateTime($p['payment_date']);
+                        $diff = $desde->diff($hasta);
                         $mora_p = ($diff->y * 12) + $diff->m;
                         if ($diff->d > 15) $mora_p++;
+                        $mora_p = max(0, $mora_p);
+                        $ult_fecha_mora = $p['payment_date'];
                     ?>
                     <tr>
                         <td><?= $p['id'] ?></td>
