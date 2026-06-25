@@ -242,7 +242,7 @@ require_once '../../includes/header.php';
                         $mora_p = ($diff->y * 12) + $diff->m;
                         if ($diff->d > 15) $mora_p++;
                         $mora_p = max(0, $mora_p);
-                        $interes_acum = $interes_mensual * ($interes_mensual > 0 ? floor($acum / $interes_mensual) : 0);
+                        $interes_acum = $interes_mensual * $mora_p;
                         $ult_fecha = $p['payment_date'];
                     ?>
                     <tr>
