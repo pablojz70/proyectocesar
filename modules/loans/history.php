@@ -99,8 +99,8 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                         <?php while($l = $loans->fetch_assoc()): 
                             // Calcular mora y capital restante
                             if ($l['loan_type'] === 'plazo') {
-                                $mora_total = $l['term_months'];
                                 $cv = $l['term_months'] > 0 ? $l['total_amount'] / $l['term_months'] : 0;
+                                $pc = $cv > 0 ? floor($l['total_abonado'] / $cv) : 0;
                                 $cuota_actual = $pc + 1;
                                 $fecha_venc = date('Y-m-d', strtotime($l['start_date'] . " +$cuota_actual months"));
                                 $hoy = new DateTime();
@@ -113,22 +113,21 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                                     $mora = 0;
                                 }
                                 $capital_restante_val = max(0, $l['term_months'] - $pc);
+                                $mora_total = $mora;
                             } else {
                                 $inicio = new DateTime($l['start_date']);
                                 $hoy = new DateTime();
-                                $diff = $inicio->diff($hoy);
-                                $mora_total = ($diff->y * 12) + $diff->m;
-                                $mora_total += $diff->d > 15 ? 1 : 0;
-                                $meses_pagados = $l['monthly_payment'] > 0 ? floor($l['total_abonado'] / $l['monthly_payment']) : 0;
-                                $mora = max(0, $mora_total - $meses_pagados);
-                                $deuda_im = $l['monthly_payment'] * $mora_total;
-                                if ($l['total_abonado'] <= $deuda_im) {
+                                $dias = $inicio->diff($hoy)->days;
+                                $interes_diario = ($l['amount'] * $l['interest_rate'] / 100) / 30;
+                                $interes_dev = $interes_diario * $dias;
+                                $mora_total = ($inicio->diff($hoy)->y * 12) + $inicio->diff($hoy)->m;
+                                $mora_total += $inicio->diff($hoy)->d > 15 ? 1 : 0;
+                                $mora = $mora_total;
+                                if ($l['total_abonado'] <= $interes_dev) {
                                     $capital_restante_val = $l['amount'];
-                                    $interes_pagado = false;
                                 } else {
-                                    $exc = $l['total_abonado'] - $deuda_im;
+                                    $exc = $l['total_abonado'] - $interes_dev;
                                     $capital_restante_val = max(0, $l['amount'] - $exc);
-                                    $interes_pagado = true;
                                 }
                             }
                         ?>
@@ -141,7 +140,7 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                             <td><?= date('d/m/Y', strtotime($l['start_date'])) ?></td>
                             <td><?= $l['loan_type'] === 'mensual' ? 'Mensual' : $l['term_months'] . ' meses' ?></td>
                             <td><?= $l['status'] === 'pagado' ? '-' : $mora ?></td>
-                            <td><strong><?= $l['loan_type'] === 'mensual' ? number_format(max(0, $l['amount'] + ($l['monthly_payment'] * $mora_total) - $l['total_abonado']),2) : number_format(max(0, $l['total_amount'] - $l['total_abonado']),2) ?></strong></td>
+                            <td><strong><?= $l['loan_type'] === 'mensual' ? number_format(max(0, $l['amount'] + ($interes_diario * $dias) - $l['total_abonado']),2) : number_format(max(0, $l['total_amount'] - $l['total_abonado']),2) ?></strong></td>
                             <td><?php
                                 if ($l['loan_type'] === 'plazo') {
                                     echo $capital_restante_val . ' cuotas';
@@ -160,8 +159,8 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                                     elseif ($cuotas_rest <= 0 || $l['total_abonado'] >= $l['total_amount']) $estado_mostrar = 'pagado';
                                     else $estado_mostrar = 'activo';
                                 } else {
-                                    if ($mora > 0 && !$interes_pagado) $estado_mostrar = 'vencido';
-                                    elseif ($capital_restante_val <= 0 && $interes_pagado) $estado_mostrar = 'pagado';
+                                    if ($mora > 0) $estado_mostrar = 'vencido';
+                                    elseif ($capital_restante_val <= 0) $estado_mostrar = 'pagado';
                                     else $estado_mostrar = 'activo';
                                 }
                                 ?>
