@@ -105,13 +105,7 @@ if ($loan_id > 0) {
         $mora_total = ($diff_total->y * 12) + $diff_total->m;
         $mora_total += $diff_total->d > 15 ? 1 : 0;
 
-        // Calcular meses pagados
-        $meses_pagados = 0;
-        $p_m = $db->query("SELECT amount FROM loan_payments WHERE loan_id=$loan_id ORDER BY payment_date, id");
-        while ($pm = $p_m->fetch_assoc()) {
-            $meses_pagados += $interes_mensual > 0 ? floor($pm['amount'] / $interes_mensual) : 0;
-        }
-        $mora = max(0, $mora_total - $meses_pagados);
+        $mora = $mora_total;
 
         // Obtener el maximo MoraP de todos los pagos
         $max_mora_p = 0;
