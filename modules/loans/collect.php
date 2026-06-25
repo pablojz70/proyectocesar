@@ -109,8 +109,14 @@ if ($loan_id > 0) {
     $mora_total += $diff->d > 15 ? 1 : 0;
 
     $interes_mensual = $loan['monthly_payment'];
+    // Calcular meses pagados sumando MoraP de cada pago (segun monto)
     $meses_pagados = 0;
-    $mora = $mora_total;
+    $pagos_mora = $db->query("SELECT amount FROM loan_payments WHERE loan_id=$loan_id ORDER BY payment_date, id");
+    while ($pm = $pagos_mora->fetch_assoc()) {
+        $mp = $interes_mensual > 0 ? floor($pm['amount'] / $interes_mensual) : 0;
+        $meses_pagados += max(0, $mp);
+    }
+    $mora = max(0, $mora_total - $meses_pagados);
     if ($loan['loan_type'] === 'plazo') {
         $cuota_plazo = $loan['term_months'] > 0 ? $loan['total_amount'] / $loan['term_months'] : 0;
         $cuotas_pagadas = $cuota_plazo > 0 ? floor($total_pagado / $cuota_plazo) : 0;
@@ -235,15 +241,9 @@ require_once '../../includes/header.php';
                     <?php if ($pagos->num_rows === 0): ?>
                     <tr><td colspan="8" class="text-center text-muted">Sin pagos registrados</td></tr>
                     <?php endif; ?>
-                    <?php $acum = 0; $ult_fecha = $loan['start_date']; while($p = $pagos->fetch_assoc()): $acum += $p['amount']; 
-                        $desde = new DateTime($ult_fecha);
-                        $hasta = new DateTime($p['payment_date']);
-                        $diff = $desde->diff($hasta);
-                        $mora_p = ($diff->y * 12) + $diff->m;
-                        if ($diff->d > 15) $mora_p++;
-                        $mora_p = max(0, $mora_p);
+                    <?php $acum = 0; while($p = $pagos->fetch_assoc()): $acum += $p['amount']; 
+                        $mora_p = $interes_mensual > 0 ? floor($p['amount'] / $interes_mensual) : 0;
                         $interes_acum = $interes_mensual * $mora_p;
-                        $ult_fecha = $p['payment_date'];
                     ?>
                     <tr>
                         <td><?= $p['id'] ?></td>
