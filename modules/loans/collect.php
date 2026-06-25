@@ -234,10 +234,11 @@ require_once '../../includes/header.php';
                     <?php if ($pagos->num_rows === 0): ?>
                     <tr><td colspan="7" class="text-center text-muted">Sin pagos registrados</td></tr>
                     <?php endif; ?>
-                    <?php $acum = 0; $inicio_ts = strtotime($loan['start_date']); while($p = $pagos->fetch_assoc()): $acum += $p['amount']; 
-                        $diff = (strtotime($p['payment_date']) - $inicio_ts) / 86400;
-                        $mora_p = floor($diff / 30);
-                        if (($diff - $mora_p * 30) > 15) $mora_p++;
+                    <?php $acum = 0; $inicio_dt = new DateTime($loan['start_date']); while($p = $pagos->fetch_assoc()): $acum += $p['amount']; 
+                        $pago_dt = new DateTime($p['payment_date']);
+                        $diff = $inicio_dt->diff($pago_dt);
+                        $mora_p = ($diff->y * 12) + $diff->m;
+                        if ($diff->d > 15) $mora_p++;
                     ?>
                     <tr>
                         <td><?= $p['id'] ?></td>
