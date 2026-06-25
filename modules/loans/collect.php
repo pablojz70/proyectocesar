@@ -181,7 +181,15 @@ require_once '../../includes/header.php';
                     </tr>
                     <?php if ($loan['loan_type'] === 'mensual' && $interes_pagado && $capital_restante > 0 && $capital_restante < $loan['amount']): 
                         $nuevo_interes = $capital_restante * $loan['interest_rate'] / 100;
-                        $nueva_fecha = date('d/m/Y', strtotime($fecha_pago ?? $hoy->format('Y-m-d') . ' +0 months'));
+                        // Fecha: mismo dia y año del inicio, pero mes del ultimo pago
+                        $ult_pago_f = $db->query("SELECT MAX(payment_date) as f FROM loan_payments WHERE loan_id=$loan_id")->fetch_assoc()['f'];
+                        if ($ult_pago_f) {
+                            $ts_pago = strtotime($ult_pago_f);
+                            $ts_inicio = strtotime($loan['start_date']);
+                            $nueva_fecha = date('d/', $ts_inicio) . date('m/Y', $ts_pago);
+                        } else {
+                            $nueva_fecha = date('d/m/Y', strtotime($loan['start_date']));
+                        }
                     ?>
                     <tr class="table-info">
                         <td><?= $loan['id'] ?>*</td>
