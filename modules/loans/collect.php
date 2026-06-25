@@ -25,12 +25,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $db->begin_transaction();
     try {
-        $r = $db->query("INSERT INTO loan_payments (loan_id, amount, payment_date) VALUES ($loan_id_pay, $monto, '$fecha')");
-        if (!$r) throw new Exception("Error al registrar pago: " . $db->error);
+        $loan_type = $loan['loan_type'];
 
-        $total_pagado = $db->query("SELECT COALESCE(SUM(amount),0) as t FROM loan_payments WHERE loan_id=$loan_id_pay")->fetch_assoc()['t'];
+        if ($loan_type === 'plazo') {
+            $r = $db->query("INSERT INTO loan_payments (loan_id, amount, payment_date) VALUES ($loan_id_pay, $monto, '$fecha')");
+            if (!$r) throw new Exception("Error al registrar pago: " . $db->error);
+            $total_pagado = $db->query("SELECT COALESCE(SUM(amount),0) as t FROM loan_payments WHERE loan_id=$loan_id_pay")->fetch_assoc()['t'];
 
-        if ($loan['loan_type'] === 'plazo') {
             $cuotas = $db->query("SELECT * FROM loan_installments WHERE loan_id=$loan_id_pay AND status='pendiente' ORDER BY installment_number");
             $acum = 0;
             while ($c = $cuotas->fetch_assoc()) {
@@ -42,22 +43,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pendientes = $db->query("SELECT COUNT(*) as c FROM loan_installments WHERE loan_id=$loan_id_pay AND status='pendiente'")->fetch_assoc()['c'];
             if ($pendientes == 0) $db->query("UPDATE loans SET status='pagado' WHERE id=$loan_id_pay");
         } else {
-            $interes_m = $loan['monthly_payment'];
-            $capital_orig = $loan['amount'];
-            $fecha_ini = new DateTime($loan['start_date']);
-            $fecha_pago = new DateTime($fecha);
-            $dias_desde_ini = $fecha_ini->diff($fecha_pago)->days;
+            // Obtener valores ANTES de insertar el pago
+            $capital_actual = $db->query("SELECT total_amount FROM loans WHERE id=$loan_id_pay")->fetch_assoc()['total_amount'];
+            $ult_pago = $db->query("SELECT payment_date FROM loan_payments WHERE loan_id=$loan_id_pay ORDER BY payment_date DESC, id DESC LIMIT 1")->fetch_assoc();
+            $ult_fecha = $ult_pago ? $ult_pago['payment_date'] : $loan['start_date'];
 
-            // Interes por dia
-            $interes_diario = ($capital_orig * $loan['interest_rate'] / 100) / 30;
-            $interes_devengado = $interes_diario * $dias_desde_ini;
+            // Insertar pago
+            $r = $db->query("INSERT INTO loan_payments (loan_id, amount, payment_date) VALUES ($loan_id_pay, $monto, '$fecha')");
+            if (!$r) throw new Exception("Error al registrar pago: " . $db->error);
 
-            if ($total_pagado <= $interes_devengado) {
-                // Caso 2 o 3: no cubre interes, se acumula
+            $fecha_ult = new DateTime($ult_fecha);
+            $fecha_pago_dt = new DateTime($fecha);
+            $dias_periodo = max(0, $fecha_ult->diff($fecha_pago_dt)->days);
+
+            // Interes del periodo
+            $interes_diario = ($capital_actual * $loan['interest_rate'] / 100) / 30;
+            $interes_periodo = $interes_diario * $dias_periodo;
+
+            if ($monto <= $interes_periodo) {
+                // Pago no cubre interes del periodo, se acumula
             } else {
-                // Caso 1 o 4: paga interes, excedente al capital
-                $exc = $total_pagado - $interes_devengado;
-                $nuevo_cap = max(0, $capital_orig - $exc);
+                $exc = $monto - $interes_periodo;
+                $nuevo_cap = max(0, $capital_actual - $exc);
                 $db->query("UPDATE loans SET total_amount = $nuevo_cap WHERE id=$loan_id_pay");
                 if ($nuevo_cap <= 0) $db->query("UPDATE loans SET status='pagado' WHERE id=$loan_id_pay");
             }
@@ -98,7 +105,7 @@ if ($loan_id > 0) {
         $mora_total = ($diff_total->y * 12) + $diff_total->m;
         $mora_total += $diff_total->d > 15 ? 1 : 0;
 
-        // Calcular meses pagados efectivamente (suma de floor(monto/interes))
+        // Calcular meses pagados
         $meses_pagados = 0;
         $p_m = $db->query("SELECT amount FROM loan_payments WHERE loan_id=$loan_id ORDER BY payment_date, id");
         while ($pm = $p_m->fetch_assoc()) {
@@ -106,13 +113,14 @@ if ($loan_id > 0) {
         }
         $mora = max(0, $mora_total - $meses_pagados);
 
+        // Interes devengado desde inicio hasta hoy
         $dias_desde_ini = $inicio->diff($hoy)->days;
         $interes_diario = ($loan['amount'] * $loan['interest_rate'] / 100) / 30;
         $interes_devengado = $interes_diario * $dias_desde_ini;
 
         if ($total_pagado == 0) {
             $capital_restante = $loan['amount'];
-            $deuda_restante = $loan['amount'] + ($interes_mensual * $mora_total);
+            $deuda_restante = $loan['amount'] + $interes_devengado;
             $interes_pagado = false;
         } elseif ($total_pagado <= $interes_devengado) {
             $capital_restante = $loan['amount'];
