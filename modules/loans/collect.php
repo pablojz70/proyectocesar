@@ -50,7 +50,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$r) throw new Exception("Error al registrar pago: " . $db->error);
             $total_pagado = $db->query("SELECT COALESCE(SUM(amount),0) as t FROM loan_payments WHERE loan_id=$loan_id_pay")->fetch_assoc()['t'];
 
-            $interes_mensual = $loan['monthly_payment'];
+    // Calcular mora (meses desde inicio a hoy)
+    $interes_mensual = $loan['monthly_payment'];
+    $inicio = new DateTime($loan['start_date']);
+    $hoy = new DateTime();
+    $diff = $inicio->diff($hoy);
+    $mora = ($diff->y * 12) + $diff->m;
+    $mora += $diff->d > 15 ? 1 : 0;
             $capital_restante = $loan['total_amount'];
             $abonado_capital = 0;
 
@@ -95,12 +101,12 @@ if ($loan_id > 0) {
     $total_pagado = $db->query("SELECT COALESCE(SUM(amount),0) as t FROM loan_payments WHERE loan_id=$loan_id")->fetch_assoc()['t'];
     $cuotas = $db->query("SELECT * FROM loan_installments WHERE loan_id=$loan_id ORDER BY installment_number");
 
-    // Calcular mora real (meses desde inicio menos meses pagados)
-    $start = new DateTime($loan['start_date']);
-    $now = new DateTime();
-    $diff = $start->diff($now);
-    $meses_total = ($diff->y * 12) + $diff->m;
-    $meses_total += $diff->d > 15 ? 1 : 0;
+    // Calcular mora (meses desde inicio a hoy)
+    $inicio = new DateTime($loan['start_date']);
+    $hoy = new DateTime();
+    $diff = $inicio->diff($hoy);
+    $mora = ($diff->y * 12) + $diff->m;
+    $mora += $diff->d > 15 ? 1 : 0;
 
     $interes_mensual = $loan['monthly_payment'];
     if ($loan['loan_type'] === 'plazo') {
