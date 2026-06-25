@@ -105,10 +105,12 @@ if ($loan_id > 0) {
     $inicio = new DateTime($loan['start_date']);
     $hoy = new DateTime();
     $diff = $inicio->diff($hoy);
-    $mora = ($diff->y * 12) + $diff->m;
-    $mora += $diff->d > 15 ? 1 : 0;
+    $mora_total = ($diff->y * 12) + $diff->m;
+    $mora_total += $diff->d > 15 ? 1 : 0;
 
     $interes_mensual = $loan['monthly_payment'];
+    $meses_pagados = $interes_mensual > 0 ? floor($total_pagado / $interes_mensual) : 0;
+    $mora = max(0, $mora_total - $meses_pagados);
     if ($loan['loan_type'] === 'plazo') {
         $cuota_plazo = $loan['term_months'] > 0 ? $loan['total_amount'] / $loan['term_months'] : 0;
         $cuotas_pagadas = $cuota_plazo > 0 ? floor($total_pagado / $cuota_plazo) : 0;
