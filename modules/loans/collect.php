@@ -142,11 +142,11 @@ if ($loan_id > 0) {
 
         if ($total_pagado == 0) {
             $capital_restante = $loan['amount'];
-            $deuda_restante = $loan['amount'] + ($interes_mensual * $mora);
+            $deuda_restante = $loan['amount'] + ($interes_mensual * $mora_total);
             $interes_pagado = false;
         } elseif ($total_pagado <= $deuda_im) {
             $capital_restante = $loan['amount'];
-            $deuda_restante = max(0, $loan['amount'] + ($interes_mensual * $mora) - $total_pagado);
+            $deuda_restante = max(0, $loan['amount'] + ($interes_mensual * $mora_total) - $total_pagado);
             $interes_pagado = false;
         } else {
             $exc = $total_pagado - $deuda_im;
@@ -154,7 +154,7 @@ if ($loan_id > 0) {
             $deuda_restante = $capital_restante;
             $interes_pagado = true;
         }
-        $total_cuota = $loan['amount'] + ($interes_mensual * $mora);
+        $total_cuota = $loan['amount'] + ($interes_mensual * $mora_total);
     }
 }
 

@@ -99,8 +99,8 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                         <?php while($l = $loans->fetch_assoc()): 
                             // Calcular mora y capital restante
                             if ($l['loan_type'] === 'plazo') {
+                                $mora_total = $l['term_months'];
                                 $cv = $l['term_months'] > 0 ? $l['total_amount'] / $l['term_months'] : 0;
-                                $pc = $cv > 0 ? floor($l['total_abonado'] / $cv) : 0;
                                 $cuota_actual = $pc + 1;
                                 $fecha_venc = date('Y-m-d', strtotime($l['start_date'] . " +$cuota_actual months"));
                                 $hoy = new DateTime();
@@ -141,7 +141,7 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                             <td><?= date('d/m/Y', strtotime($l['start_date'])) ?></td>
                             <td><?= $l['loan_type'] === 'mensual' ? 'Mensual' : $l['term_months'] . ' meses' ?></td>
                             <td><?= $l['status'] === 'pagado' ? '-' : $mora ?></td>
-                            <td><strong><?= $l['loan_type'] === 'mensual' ? number_format(max(0, $l['amount'] + ($l['monthly_payment'] * ($mora > 0 ? $mora : 1)) - $l['total_abonado']),2) : number_format(max(0, $l['total_amount'] - $l['total_abonado']),2) ?></strong></td>
+                            <td><strong><?= $l['loan_type'] === 'mensual' ? number_format(max(0, $l['amount'] + ($l['monthly_payment'] * $mora_total) - $l['total_abonado']),2) : number_format(max(0, $l['total_amount'] - $l['total_abonado']),2) ?></strong></td>
                             <td><?php
                                 if ($l['loan_type'] === 'plazo') {
                                     echo $capital_restante_val . ' cuotas';
