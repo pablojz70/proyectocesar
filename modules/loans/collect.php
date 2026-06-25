@@ -234,12 +234,15 @@ require_once '../../includes/header.php';
                     <?php if ($pagos->num_rows === 0): ?>
                     <tr><td colspan="8" class="text-center text-muted">Sin pagos registrados</td></tr>
                     <?php endif; ?>
-                    <?php $acum = 0; $acum_ant = 0; $inicio_dt = new DateTime($loan['start_date']); while($p = $pagos->fetch_assoc()): $acum += $p['amount']; 
-                        $meses_cubiertos_ant = $interes_mensual > 0 ? floor($acum_ant / $interes_mensual) : 0;
-                        $meses_cubiertos_act = $interes_mensual > 0 ? floor($acum / $interes_mensual) : 0;
-                        $mora_p = max(0, $meses_cubiertos_act - $meses_cubiertos_ant);
-                        $interes_acum = $interes_mensual * $meses_cubiertos_act;
-                        $acum_ant = $acum;
+                    <?php $acum = 0; $ult_fecha = $loan['start_date']; while($p = $pagos->fetch_assoc()): $acum += $p['amount']; 
+                        $desde = new DateTime($ult_fecha);
+                        $hasta = new DateTime($p['payment_date']);
+                        $diff = $desde->diff($hasta);
+                        $mora_p = ($diff->y * 12) + $diff->m;
+                        if ($diff->d > 15) $mora_p++;
+                        $mora_p = max(0, $mora_p);
+                        $interes_acum = $interes_mensual * ($interes_mensual > 0 ? floor($acum / $interes_mensual) : 0);
+                        $ult_fecha = $p['payment_date'];
                     ?>
                     <tr>
                         <td><?= $p['id'] ?></td>
