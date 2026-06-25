@@ -118,13 +118,16 @@ if ($loan_id > 0) {
         $interes_diario = ($loan['amount'] * $loan['interest_rate'] / 100) / 30;
         $interes_devengado = $interes_diario * $dias_desde_ini;
 
+        // Deuda = Capital + Interes mensual x Mora (no por dias)
+        $deuda_bruta = $loan['amount'] + ($interes_mensual * $mora_total);
+
         if ($total_pagado == 0) {
             $capital_restante = $loan['amount'];
-            $deuda_restante = $loan['amount'] + $interes_devengado;
+            $deuda_restante = $deuda_bruta;
             $interes_pagado = false;
         } elseif ($total_pagado <= $interes_devengado) {
             $capital_restante = $loan['amount'];
-            $deuda_restante = max(0, $loan['amount'] + $interes_devengado - $total_pagado);
+            $deuda_restante = max(0, $deuda_bruta - $total_pagado);
             $interes_pagado = false;
         } else {
             $exc = $total_pagado - $interes_devengado;
