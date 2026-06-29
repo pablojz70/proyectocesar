@@ -113,7 +113,7 @@ if ($loan_id > 0) {
         $total_cuota = $loan['amount'] + ($interes_mensual * $mora_total);
         $deuda_bruta = $loan['amount'] + ($interes_mensual * $mora_total);
 
-        // Generar filas por cada pago que redujo capital
+        // Generar filas por cada pago que redujo capital (mismo calculo que POST)
         $filas = [];
         $cap_act = $loan['amount'];
         $fecha_base = $loan['start_date'];
@@ -121,14 +121,11 @@ if ($loan_id > 0) {
         $pagos_filas = $db->query("SELECT * FROM loan_payments WHERE loan_id=$loan_id ORDER BY payment_date, id");
         while ($pf = $pagos_filas->fetch_assoc()) {
             $abono_acum += $pf['amount'];
-            // MoraP entre fecha base y este pago
+            // Interes diario desde fecha base hasta este pago
             $fb = new DateTime($fecha_base);
             $fp = new DateTime($pf['payment_date']);
-            $df = $fb->diff($fp);
-            $mp = ($df->y * 12) + $df->m;
-            if ($df->d > 15) $mp++;
-            $mp = max(0, $mp);
-            $interes_per = $interes_mensual * $mp;
+            $dias = max(0, $fb->diff($fp)->days);
+            $interes_per = ($cap_act * $loan['interest_rate'] / 100 / 30) * $dias;
             if ($abono_acum > $interes_per) {
                 $exc_p = $abono_acum - $interes_per;
                 $nuevo_cap = max(0, $cap_act - $exc_p);
@@ -137,7 +134,7 @@ if ($loan_id > 0) {
                         'capital' => $nuevo_cap,
                         'interes' => $nuevo_cap * $loan['interest_rate'] / 100,
                         'fecha_base' => $pf['payment_date'],
-                        'mora_p' => $mp,
+                        'mora_p' => $dias > 0 ? floor($dias / 30) : 0,
                         'abono' => $abono_acum,
                         'cap_anterior' => $cap_act
                     ];
