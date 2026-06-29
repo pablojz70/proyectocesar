@@ -22,6 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $loan = $db->query("SELECT * FROM loans WHERE id=$loan_id_pay AND $where")->fetch_assoc();
     if (!$loan) { $_SESSION['error'] = 'Pr&eacute;stamo no encontrado'; redirect('/modules/loans/history.php'); }
+    if ($loan['status'] === 'pagado') {
+        $_SESSION['error'] = 'Este pr&eacute;stamo ya est&aacute; totalmente pagado';
+        redirect("/modules/loans/collect.php?loan_id=$loan_id_pay");
+    }
 
     $db->begin_transaction();
     try {
@@ -250,6 +254,12 @@ require_once '../../includes/header.php';
     </div>
 
     <!-- ── FORMULARIO DE PAGO ── -->
+    <?php if ($loan['status'] === 'pagado'): ?>
+    <div class="alert alert-success text-center">
+        <h5><i class="bi bi-check-circle"></i> Pr&eacute;stamo totalmente pagado</h5>
+        <p class="mb-0">No se pueden registrar m&aacute;s pagos para este pr&eacute;stamo.</p>
+    </div>
+    <?php else: ?>
     <div class="card">
         <div class="card-header">Registrar Pago</div>
         <div class="card-body">
@@ -305,6 +315,7 @@ require_once '../../includes/header.php';
             </div>
         </div>
     </div>
+    <?php endif; ?>
 
     <?php else: ?>
     <!-- ── SELECCIONAR PRESTAMO ── -->
