@@ -26,6 +26,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['error'] = 'Este pr&eacute;stamo ya est&aacute; totalmente pagado';
         redirect("/modules/loans/collect.php?loan_id=$loan_id_pay");
     }
+    // Validar que no exceda el saldo
+    $cap_saldo = $db->query("SELECT total_amount FROM loans WHERE id=$loan_id_pay")->fetch_assoc()['total_amount'];
+    if ($loan['loan_type'] === 'mensual' && $monto > $cap_saldo) {
+        $_SESSION['error'] = 'El monto excede el saldo pendiente del pr&eacute;stamo';
+        redirect("/modules/loans/collect.php?loan_id=$loan_id_pay");
+    }
 
     $db->begin_transaction();
     try {
@@ -284,7 +290,7 @@ require_once '../../includes/header.php';
                 <input type="hidden" name="loan_id" value="<?= $loan['id'] ?>">
                 <div class="col-md-3">
                     <label class="form-label">Monto a Pagar</label>
-                    <input type="number" name="monto" id="monto_pago" class="form-control" step="0.01" min="0" required>
+                    <input type="number" name="monto" id="monto_pago" class="form-control" step="0.01" min="0" max="<?= $pago_monto ?>" required>
                     <input type="hidden" id="pago_completo_monto" value="<?= $pago_monto ?>">
                     <input type="hidden" id="interes_final_val" value="<?= $int_final ?>">
                     <input type="hidden" id="capital_final_val" value="<?= $cap_final ?>">
