@@ -52,13 +52,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $r = $db->query("INSERT INTO loan_payments (loan_id, amount, payment_date) VALUES ($loan_id_pay, $monto, '$fecha')");
             if (!$r) throw new Exception("Error al registrar pago: " . $db->error);
 
+            // MoraP entre ultimo pago y este pago
             $fecha_ult = new DateTime($ult_fecha);
             $fecha_pago_dt = new DateTime($fecha);
-            $dias_periodo = max(0, $fecha_ult->diff($fecha_pago_dt)->days);
+            $diff = $fecha_ult->diff($fecha_pago_dt);
+            $mora_p = ($diff->y * 12) + $diff->m;
+            if ($diff->d > 15) $mora_p++;
+            $mora_p = max(0, $mora_p);
 
-            // Interes del periodo
-            $interes_diario = ($capital_actual * $loan['interest_rate'] / 100) / 30;
-            $interes_periodo = $interes_diario * $dias_periodo;
+            // Interes del periodo = MoraP * Interes Mensual
+            $interes_periodo = $loan['monthly_payment'] * $mora_p;
 
             if ($monto <= $interes_periodo) {
                 // Pago no cubre interes del periodo, se acumula
@@ -104,40 +107,54 @@ if ($loan_id > 0) {
     } else {
         $mora_total = ($diff_total->y * 12) + $diff_total->m;
         $mora_total += $diff_total->d > 15 ? 1 : 0;
-
         $mora = $mora_total;
-
-        // Obtener el maximo MoraP de todos los pagos
-        $max_mora_p = 0;
-        $p_mora = $db->query("SELECT payment_date FROM loan_payments WHERE loan_id=$loan_id ORDER BY payment_date DESC LIMIT 1");
-        if ($pm = $p_mora->fetch_assoc()) {
-            $fecha_ult_pago = new DateTime($pm['payment_date']);
-            $inicio_p = new DateTime($loan['start_date']);
-            $diff = $inicio_p->diff($fecha_ult_pago);
-            $max_mora_p = ($diff->y * 12) + $diff->m;
-            if ($diff->d > 15) $max_mora_p++;
-        }
-
-        $interes_por_mora = $interes_mensual * $max_mora_p;
-
-        // Deuda = Capital + Interes mensual x Mora (no por dias)
+        $total_cuota = $loan['amount'] + ($interes_mensual * $mora_total);
         $deuda_bruta = $loan['amount'] + ($interes_mensual * $mora_total);
 
-        if ($total_pagado == 0) {
-            $capital_restante = $loan['amount'];
-            $deuda_restante = $deuda_bruta;
-            $interes_pagado = false;
-        } elseif ($total_pagado <= $interes_por_mora) {
-            $capital_restante = $loan['amount'];
+        // Generar filas por cada pago que redujo capital
+        $filas = [];
+        $cap_act = $loan['amount'];
+        $fecha_base = $loan['start_date'];
+        $abono_acum = 0;
+        $pagos_filas = $db->query("SELECT * FROM loan_payments WHERE loan_id=$loan_id ORDER BY payment_date, id");
+        while ($pf = $pagos_filas->fetch_assoc()) {
+            $abono_acum += $pf['amount'];
+            // MoraP entre fecha base y este pago
+            $fb = new DateTime($fecha_base);
+            $fp = new DateTime($pf['payment_date']);
+            $df = $fb->diff($fp);
+            $mp = ($df->y * 12) + $df->m;
+            if ($df->d > 15) $mp++;
+            $mp = max(0, $mp);
+            $interes_per = $interes_mensual * $mp;
+            if ($abono_acum > $interes_per) {
+                $exc_p = $abono_acum - $interes_per;
+                $nuevo_cap = max(0, $cap_act - $exc_p);
+                if ($nuevo_cap < $cap_act) {
+                    $filas[] = [
+                        'capital' => $nuevo_cap,
+                        'interes' => $nuevo_cap * $loan['interest_rate'] / 100,
+                        'fecha_base' => $pf['payment_date'],
+                        'mora_p' => $mp,
+                        'abono' => $abono_acum,
+                        'cap_anterior' => $cap_act
+                    ];
+                    $cap_act = $nuevo_cap;
+                    $fecha_base = $pf['payment_date'];
+                    $abono_acum = 0;
+                }
+            }
+        }
+
+        $capital_restante = $cap_act;
+        if (empty($filas)) {
             $deuda_restante = max(0, $deuda_bruta - $total_pagado);
-            $interes_pagado = false;
+            $interes_pagado = $total_pagado > ($interes_mensual * $mora_total);
         } else {
-            $exc = $total_pagado - $interes_por_mora;
-            $capital_restante = max(0, $loan['amount'] - $exc);
-            $deuda_restante = $capital_restante;
+            $ult = end($filas);
+            $deuda_restante = $ult['capital'];
             $interes_pagado = true;
         }
-        $total_cuota = $loan['amount'] + ($interes_mensual * $mora_total);
     }
 }
 
@@ -173,46 +190,26 @@ require_once '../../includes/header.php';
                         <td><strong><?= $loan['loan_type'] === 'plazo' ? $cuotas_restantes . ' cuotas' : number_format($capital_restante,2) ?></strong></td>
                         <td><?= $total_pagado > 0 ? number_format($total_pagado,2) : '-' ?></td>
                     </tr>
-                    <?php if ($loan['loan_type'] === 'mensual' && $interes_pagado && $capital_restante > 0 && $capital_restante < $loan['amount']): 
-                        $nuevo_interes = $capital_restante * $loan['interest_rate'] / 100;
-                        // Fecha: mismo dia y año del inicio, pero mes del ultimo pago
-                        $ult_pago_f = $db->query("SELECT MAX(payment_date) as f FROM loan_payments WHERE loan_id=$loan_id")->fetch_assoc()['f'];
-                        if ($ult_pago_f) {
-                            $ts_pago = strtotime($ult_pago_f);
-                            $ts_inicio = strtotime($loan['start_date']);
-                            $nueva_fecha = date('d/', $ts_inicio) . date('m/Y', $ts_pago);
-                        } else {
-                            $nueva_fecha = date('d/m/Y', strtotime($loan['start_date']));
-                        }
-                        // Mora fila2 = Mora fila1 - MoraP del ultimo pago
-                        $mora_f2 = $mora;
-                        if ($ult_pago_f) {
-                            $ant_fecha = $db->query("SELECT payment_date FROM loan_payments WHERE loan_id=$loan_id AND payment_date < '$ult_pago_f' ORDER BY payment_date DESC LIMIT 1")->fetch_assoc();
-                            $base = $ant_fecha ? $ant_fecha['payment_date'] : $loan['start_date'];
-                            $d = new DateTime($base);
-                            $h = new DateTime($ult_pago_f);
-                            $df = $d->diff($h);
-                            $mp = ($df->y * 12) + $df->m;
-                            if ($df->d > 15) $mp++;
-                            $mora_f2 = max(0, $mora - $mp);
-                        }
+                    <?php foreach ($filas as $idx => $fila): 
+                        $mora_f2 = $mora - $fila['mora_p'];
+                        $nueva_fecha = date('d/', strtotime($loan['start_date'])) . date('m/Y', strtotime($fila['fecha_base']));
                     ?>
                     <tr class="table-info">
-                        <td><?= $loan['id'] ?>*</td>
+                        <td><?= $loan['id'] ?>*<?= $idx+1 ?></td>
                         <td><?= h($loan['client_name']) ?></td>
                         <td><?= $loan['currency'] ?></td>
-                        <td><?= number_format($capital_restante,2) ?></td>
+                        <td><?= number_format($fila['capital'],2) ?></td>
                         <td><?= intval($loan['interest_rate']) ?>%</td>
-                        <td><?= number_format($nuevo_interes,2) ?></td>
+                        <td><?= number_format($fila['interes'],2) ?></td>
                         <td><?= $nueva_fecha ?></td>
                         <td>Mensual</td>
                         <td><?= $mora_f2 ?></td>
-                        <td><?= number_format($capital_restante + ($nuevo_interes * $mora),2) ?></td>
-                        <td><?= number_format($capital_restante + ($nuevo_interes * $mora),2) ?></td>
-                        <td><strong><?= number_format($capital_restante,2) ?></strong></td>
-                        <td><?= number_format($total_pagado,2) ?></td>
+                        <td><?= number_format($fila['capital'] + ($fila['interes'] * $mora_f2),2) ?></td>
+                        <td><?= number_format($fila['capital'] + ($fila['interes'] * $mora_f2),2) ?></td>
+                        <td><strong><?= number_format($fila['capital'],2) ?></strong></td>
+                        <td><?= number_format($fila['abono'],2) ?></td>
                     </tr>
-                    <?php endif; ?>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
