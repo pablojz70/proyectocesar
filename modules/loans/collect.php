@@ -190,8 +190,9 @@ require_once '../../includes/header.php';
                         <td><strong><?= $loan['loan_type'] === 'plazo' ? $cuotas_restantes . ' cuotas' : number_format($capital_restante,2) ?></strong></td>
                         <td><?= $total_pagado > 0 ? number_format($total_pagado,2) : '-' ?></td>
                     </tr>
-                    <?php foreach ($filas as $idx => $fila): 
-                        $mora_f2 = $mora - $fila['mora_p'];
+                    <?php $mora_acum = $mora; foreach ($filas as $idx => $fila): 
+                        $mora_acum -= $fila['mora_p'];
+                        $mora_f2 = max(0, $mora_acum);
                         $nueva_fecha = date('d/', strtotime($loan['start_date'])) . date('m/Y', strtotime($fila['fecha_base']));
                     ?>
                     <tr class="table-info">
