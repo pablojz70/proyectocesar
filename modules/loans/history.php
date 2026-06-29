@@ -120,13 +120,31 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                                 $mora_total = ($inicio->diff($hoy)->y * 12) + $inicio->diff($hoy)->m;
                                 $mora_total += $inicio->diff($hoy)->d > 15 ? 1 : 0;
                                 $mora = $mora_total;
-                                $interes_dev = $l['monthly_payment'] * $mora_total;
-                                if ($l['total_abonado'] <= $interes_dev) {
-                                    $capital_restante_val = $l['amount'];
-                                } else {
-                                    $exc = $l['total_abonado'] - $interes_dev;
-                                    $capital_restante_val = max(0, $l['amount'] - $exc);
+                                // Calcular capital restante iterando pagos (mismo metodo que collect)
+                                $cap_act = $l['amount'];
+                                $fecha_base = $l['start_date'];
+                                $abono_acum = 0;
+                                $p_f = $db->query("SELECT amount, payment_date FROM loan_payments WHERE loan_id={$l['id']} ORDER BY payment_date, id");
+                                while ($pf = $p_f->fetch_assoc()) {
+                                    $abono_acum += $pf['amount'];
+                                    $fb = new DateTime($fecha_base);
+                                    $fp = new DateTime($pf['payment_date']);
+                                    $df = $fb->diff($fp);
+                                    $mp = ($df->y * 12) + $df->m;
+                                    if ($df->d > 15) $mp++;
+                                    $mp = max(0, $mp);
+                                    $int_per = $l['monthly_payment'] * $mp;
+                                    if ($abono_acum > $int_per) {
+                                        $exc = $abono_acum - $int_per;
+                                        $nuevo = max(0, $cap_act - $exc);
+                                        if ($nuevo < $cap_act) {
+                                            $cap_act = $nuevo;
+                                            $fecha_base = $pf['payment_date'];
+                                            $abono_acum = 0;
+                                        }
+                                    }
                                 }
+                                $capital_restante_val = $cap_act;
                             }
                         ?>
                         <tr>
