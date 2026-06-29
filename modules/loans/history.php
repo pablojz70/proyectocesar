@@ -120,7 +120,7 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                                 $mora_total = ($inicio->diff($hoy)->y * 12) + $inicio->diff($hoy)->m;
                                 $mora_total += $inicio->diff($hoy)->d > 15 ? 1 : 0;
                                 $mora = $mora_total;
-                                // Calcular capital restante iterando pagos (mismo metodo que collect)
+                                // Calcular capital restante iterando pagos (diario, como collect)
                                 $cap_act = $l['amount'];
                                 $fecha_base = $l['start_date'];
                                 $abono_acum = 0;
@@ -129,11 +129,8 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                                     $abono_acum += $pf['amount'];
                                     $fb = new DateTime($fecha_base);
                                     $fp = new DateTime($pf['payment_date']);
-                                    $df = $fb->diff($fp);
-                                    $mp = ($df->y * 12) + $df->m;
-                                    if ($df->d > 15) $mp++;
-                                    $mp = max(0, $mp);
-                                    $int_per = $l['monthly_payment'] * $mp;
+                                    $dias = max(0, $fb->diff($fp)->days);
+                                    $int_per = ($cap_act * $l['interest_rate'] / 100 / 30) * $dias;
                                     if ($abono_acum > $int_per) {
                                         $exc = $abono_acum - $int_per;
                                         $nuevo = max(0, $cap_act - $exc);
