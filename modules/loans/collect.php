@@ -80,6 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $exc = $monto - $interes_periodo;
                 $nuevo_cap = round(max(0, $capital_actual - $exc), 2);
+                // Forzar a 0 si es menor a 0.01 (evita milesimas)
+                if ($nuevo_cap < 0.01) $nuevo_cap = 0;
                 $db->query("UPDATE loans SET total_amount = $nuevo_cap WHERE id=$loan_id_pay");
                 if ($nuevo_cap <= 0) $db->query("UPDATE loans SET status='pagado' WHERE id=$loan_id_pay");
             }
@@ -139,6 +141,7 @@ if ($loan_id > 0) {
             if ($abono_acum > $interes_per) {
                 $exc_p = $abono_acum - $interes_per;
                 $nuevo_cap = round(max(0, $cap_act - $exc_p), 2);
+                if ($nuevo_cap < 0.01) $nuevo_cap = 0;
                 if ($nuevo_cap < $cap_act) {
                     $filas[] = [
                         'capital' => $nuevo_cap,
