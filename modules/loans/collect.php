@@ -290,7 +290,7 @@ require_once '../../includes/header.php';
                 <input type="hidden" name="loan_id" value="<?= $loan['id'] ?>">
                 <div class="col-md-3">
                     <label class="form-label">Monto a Pagar</label>
-                    <input type="number" name="monto" id="monto_pago" class="form-control" step="0.01" min="0" max="<?= $pago_monto ?>" required>
+                    <input type="number" name="monto" id="monto_pago" class="form-control" step="0.01" min="0.01" max="<?= $pago_monto ?>" required>
                     <input type="hidden" id="pago_completo_monto" value="<?= $pago_monto ?>">
                     <input type="hidden" id="interes_final_val" value="<?= $int_final ?>">
                     <input type="hidden" id="capital_final_val" value="<?= $cap_final ?>">
