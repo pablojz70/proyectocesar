@@ -26,12 +26,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['error'] = 'Este pr&eacute;stamo ya est&aacute; totalmente pagado';
         redirect("/modules/loans/collect.php?loan_id=$loan_id_pay");
     }
-    // Validar que no exceda el saldo
-    $cap_saldo = $db->query("SELECT total_amount FROM loans WHERE id=$loan_id_pay")->fetch_assoc()['total_amount'];
-    if ($loan['loan_type'] === 'mensual' && $monto > $cap_saldo) {
-        $_SESSION['error'] = 'El monto excede el saldo pendiente del pr&eacute;stamo';
-        redirect("/modules/loans/collect.php?loan_id=$loan_id_pay");
-    }
 
     $db->begin_transaction();
     try {
