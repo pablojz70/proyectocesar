@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Pago no cubre interes del periodo, se acumula
             } else {
                 $exc = $monto - $interes_periodo;
-                $nuevo_cap = max(0, $capital_actual - $exc);
+                $nuevo_cap = round(max(0, $capital_actual - $exc), 2);
                 $db->query("UPDATE loans SET total_amount = $nuevo_cap WHERE id=$loan_id_pay");
                 if ($nuevo_cap <= 0) $db->query("UPDATE loans SET status='pagado' WHERE id=$loan_id_pay");
             }
@@ -138,11 +138,11 @@ if ($loan_id > 0) {
             $interes_per = ($cap_act * $loan['interest_rate'] / 100 / 30) * $dias;
             if ($abono_acum > $interes_per) {
                 $exc_p = $abono_acum - $interes_per;
-                $nuevo_cap = max(0, $cap_act - $exc_p);
+                $nuevo_cap = round(max(0, $cap_act - $exc_p), 2);
                 if ($nuevo_cap < $cap_act) {
                     $filas[] = [
                         'capital' => $nuevo_cap,
-                        'interes' => $nuevo_cap * $loan['interest_rate'] / 100,
+                        'interes' => round($nuevo_cap * $loan['interest_rate'] / 100, 2),
                         'fecha_base' => $pf['payment_date'],
                         'mora_p' => $dias > 0 ? floor($dias / 30) : 0,
                         'abono' => $abono_acum,
@@ -282,8 +282,8 @@ require_once '../../includes/header.php';
                 $ult_f = $db->query("SELECT MAX(payment_date) as f FROM loan_payments WHERE loan_id=$loan_id")->fetch_assoc()['f'];
                 if (!$ult_f) $ult_f = $loan['start_date'];
                 $d_hoy = max(0, (new DateTime())->diff(new DateTime($ult_f))->days);
-                $int_final = ($capital_restante * $loan['interest_rate'] / 100 / 30) * $d_hoy;
-                $pago_monto = $capital_restante + $int_final;
+                $int_final = round(($capital_restante * $loan['interest_rate'] / 100 / 30) * $d_hoy, 2);
+                $pago_monto = round($capital_restante + $int_final, 2);
             }
             ?>
             <form method="POST" class="row g-2" onsubmit="this.querySelector('button[type=submit]').disabled=true">
