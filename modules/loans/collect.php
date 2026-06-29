@@ -60,8 +60,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($diff->d > 15) $mora_p++;
             $mora_p = max(0, $mora_p);
 
-            // Interes del periodo = MoraP * Interes Mensual
-            $interes_periodo = $loan['monthly_payment'] * $mora_p;
+            // Interes del periodo = diario sobre capital actual
+            $dias_periodo = max(0, $fecha_ult->diff($fecha_pago_dt)->days);
+            $interes_diario = ($capital_actual * $loan['interest_rate'] / 100) / 30;
+            $interes_periodo = $interes_diario * $dias_periodo;
 
             if ($monto <= $interes_periodo) {
                 // Pago no cubre interes del periodo, se acumula
