@@ -258,12 +258,27 @@ require_once '../../includes/header.php';
             $fecha_min = $db->query("SELECT MAX(payment_date) as f FROM loan_payments WHERE loan_id=$loan_id")->fetch_assoc()['f'];
             if (!$fecha_min) $fecha_min = $loan['start_date'];
             $fecha_max = date('Y-m-d');
+
+            // Calcular Pago Completo
+            $pago_monto = $deuda_restante;
+            $int_final = 0;
+            $cap_final = $capital_restante;
+            if ($loan['loan_type'] === 'mensual' && $total_pagado > 0) {
+                $ult_f = $db->query("SELECT MAX(payment_date) as f FROM loan_payments WHERE loan_id=$loan_id")->fetch_assoc()['f'];
+                if (!$ult_f) $ult_f = $loan['start_date'];
+                $d_hoy = max(0, (new DateTime())->diff(new DateTime($ult_f))->days);
+                $int_final = ($capital_restante * $loan['interest_rate'] / 100 / 30) * $d_hoy;
+                $pago_monto = $capital_restante + $int_final;
+            }
             ?>
             <form method="POST" class="row g-2" onsubmit="this.querySelector('button[type=submit]').disabled=true">
                 <input type="hidden" name="loan_id" value="<?= $loan['id'] ?>">
                 <div class="col-md-3">
                     <label class="form-label">Monto a Pagar</label>
-                    <input type="number" name="monto" class="form-control" step="0.01" min="0" required>
+                    <input type="number" name="monto" id="monto_pago" class="form-control" step="0.01" min="0" required>
+                    <input type="hidden" id="pago_completo_monto" value="<?= $pago_monto ?>">
+                    <input type="hidden" id="interes_final_val" value="<?= $int_final ?>">
+                    <input type="hidden" id="capital_final_val" value="<?= $cap_final ?>">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Fecha de Pago</label>
@@ -277,9 +292,18 @@ require_once '../../includes/header.php';
                     <button type="submit" name="action" value="normal" class="btn btn-success w-100"><i class="bi bi-check-circle"></i> Registrar Pago</button>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
-                    <a href="?loan_id=<?= $loan['id'] ?>&pago_completo=1" class="btn btn-danger w-100" onclick="document.querySelector('[name=monto]').value='<?= $deuda_restante ?>'; document.querySelector('[name=fecha_pago]').value='<?= date('Y-m-d') ?>'; return false"><i class="bi bi-credit-card"></i> Pago Completo</a>
+                    <a href="?loan_id=<?= $loan['id'] ?>&pago_completo=1" class="btn btn-danger w-100" onclick="pagoCompleto()"><i class="bi bi-credit-card"></i> Pago Completo</a>
                 </div>
             </form>
+            <div id="resumen_pago" class="card bg-light mt-3 p-3" style="display:none">
+                <h6>Resumen de Pago Completo</h6>
+                <div class="row">
+                    <div class="col-md-4">Inter&eacute;s final: <strong id="interes_final_txt">0.00</strong></div>
+                    <div class="col-md-4">Capital restante: <strong id="capital_final_txt">0.00</strong></div>
+                    <div class="col-md-4">Total a pagar: <strong id="total_final_txt" class="text-danger">0.00</strong></div>
+                </div>
+                <small class="text-muted">Complete el monto y presione "Registrar Pago" para finalizar.</small>
+            </div>
         </div>
     </div>
 
@@ -307,4 +331,15 @@ require_once '../../includes/header.php';
     </div>
     <?php endif; ?>
 </div>
+<script>
+function pagoCompleto() {
+    var monto = document.getElementById('pago_completo_monto').value;
+    document.getElementById('monto_pago').value = monto;
+    document.querySelector('[name=fecha_pago]').value = '<?= date('Y-m-d') ?>';
+    document.getElementById('interes_final_txt').textContent = document.getElementById('interes_final_val').value;
+    document.getElementById('capital_final_txt').textContent = document.getElementById('capital_final_val').value;
+    document.getElementById('total_final_txt').textContent = monto;
+    document.getElementById('resumen_pago').style.display = 'block';
+}
+</script>
 <?php require_once '../../includes/footer.php'; ?>
