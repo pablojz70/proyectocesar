@@ -168,12 +168,12 @@ $loans = $db->query("SELECT l.*, c.name as client_name, c.cedula_rif,
                                     $cv = $l['term_months'] > 0 ? $l['total_amount'] / $l['term_months'] : 0;
                                     $pc = $cv > 0 ? floor($l['total_abonado'] / $cv) : 0;
                                     $cuotas_rest = $l['term_months'] - $pc;
-                                    if ($mora > 0) $estado_mostrar = 'vencido';
-                                    elseif ($cuotas_rest <= 0 || $l['total_abonado'] >= $l['total_amount']) $estado_mostrar = 'pagado';
+                                    if ($cuotas_rest <= 0 || $l['total_abonado'] >= $l['total_amount'] || $l['status'] === 'pagado') $estado_mostrar = 'pagado';
+                                    elseif ($mora > 0) $estado_mostrar = 'vencido';
                                     else $estado_mostrar = 'activo';
                                 } else {
-                                    if ($mora > 0) $estado_mostrar = 'vencido';
-                                    elseif ($capital_restante_val <= 0) $estado_mostrar = 'pagado';
+                                    if ($capital_restante_val <= 0.01 || $l['status'] === 'pagado') $estado_mostrar = 'pagado';
+                                    elseif ($mora > 0) $estado_mostrar = 'vencido';
                                     else $estado_mostrar = 'activo';
                                 }
                                 ?>
