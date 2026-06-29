@@ -292,7 +292,7 @@ require_once '../../includes/header.php';
                     <button type="submit" name="action" value="normal" class="btn btn-success w-100"><i class="bi bi-check-circle"></i> Registrar Pago</button>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
-                    <a href="?loan_id=<?= $loan['id'] ?>&pago_completo=1" class="btn btn-danger w-100" onclick="pagoCompleto()"><i class="bi bi-credit-card"></i> Pago Completo</a>
+                    <button type="button" class="btn btn-danger w-100" onclick="pagoCompleto()"><i class="bi bi-credit-card"></i> Pago Completo</button>
                 </div>
             </form>
             <div id="resumen_pago" class="card bg-light mt-3 p-3" style="display:none">
